@@ -1,4 +1,4 @@
 declare module '*.css' {
-  const css: any
+  const css: unknown
   export default css
 }
