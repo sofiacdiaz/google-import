@@ -15,7 +15,7 @@ import {
 } from 'vtex.styleguide'
 import type { WrappedComponentProps } from 'react-intl'
 import { injectIntl, FormattedMessage } from 'react-intl'
-import { compose, graphql, useQuery, useMutation } from 'react-apollo'
+import { useQuery, useMutation } from 'react-apollo'
 
 import GoogleSignIn from '../public/metadata/google_signin.png'
 import Q_OWNER_EMAIL from './queries/GetOwnerEmail.gql'
@@ -29,7 +29,7 @@ import M_ADD_IMAGES from './mutations/AddImages.gql'
 
 const AUTH_URL = '/sheets-catalog-import/auth'
 
-const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
+const Admin: FC<WrappedComponentProps> = ({ intl }) => {
   const { account, pages } = useRuntime()
 
   const {
@@ -41,6 +41,18 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
       accountName: account,
     },
   })
+
+  const {
+    loading: linkLoading,
+    called: linkCalled,
+    data: linkData,
+  } = useQuery<Sheet>(Q_SHEET_LINK)
+
+  const {
+    loading: tokenLoading,
+    called: tokenCalled,
+    data: tokenData,
+  } = useQuery<Token>(Q_HAVE_TOKEN)
 
   const [revoke, { loading: revokeLoading }] = useMutation(M_REVOKE, {
     onCompleted: (ret: any) => {
@@ -70,7 +82,7 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
 
   const showLink = () => {
     return (
-      (link.called && !link.loading && link.sheetLink) ||
+      (linkCalled && !linkLoading && linkData?.sheetLink) ||
       (createCalled && !createLoading && !!createData?.createSheet)
     )
   }
@@ -91,7 +103,7 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
                 id: 'admin/sheets-catalog-import.title',
               })}
             >
-              {token.called && !token.loading && token.haveToken === true && (
+              {tokenCalled && !tokenLoading && tokenData?.haveToken === true && (
                 <div>
                   {ownerCalled && !ownerLoading && ownerData && (
                     <p>
@@ -124,14 +136,14 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
       }
       fullWidth
     >
-      {token.called && (
+      {tokenCalled && (
         <div>
-          {token.loading && (
+          {tokenLoading && (
             <div className="pv6">
               <Spinner />
             </div>
           )}
-          {!token.loading && token.haveToken !== true && (
+          {!tokenLoading && tokenData?.haveToken !== true && (
             <div>
               <Card>
                 <h2>
@@ -156,13 +168,13 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
           )}
         </div>
       )}
-      {token.called && !token.loading && token.haveToken === true && (
+      {tokenCalled && !tokenLoading && tokenData?.haveToken === true && (
         <div className="bg-base pa8">
           <h2>
             <FormattedMessage id="admin/sheets-catalog-import.catalog-product.title" />
           </h2>
 
-          {!createData && link.called && !link.loading && !link.sheetLink && (
+          {!createData && linkCalled && !linkLoading && !linkData?.sheetLink && (
             <Card>
               <div className="flex">
                 <div className="w-70">
@@ -201,11 +213,11 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
                   <p>
                     <FormattedMessage id="admin/sheets-catalog-import.sheet-link.description" />{' '}
                     <a
-                      href={createData?.createSheet || link.sheetLink}
+                      href={createData?.createSheet || linkData?.sheetLink}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {createData?.createSheet || link.sheetLink}
+                      {createData?.createSheet || linkData?.sheetLink}
                     </a>
                   </p>
                 </div>
@@ -356,20 +368,4 @@ const Admin: FC<WrappedComponentProps & any> = ({ intl, link, token }) => {
   )
 }
 
-const token = {
-  name: 'token',
-  options: () => ({
-    ssr: false,
-  }),
-}
-
-const link = {
-  name: 'link',
-  options: () => ({
-    ssr: false,
-  }),
-}
-
-export default injectIntl(
-  compose(graphql(Q_HAVE_TOKEN, token), graphql(Q_SHEET_LINK, link))(Admin)
-)
+export default injectIntl(Admin)
