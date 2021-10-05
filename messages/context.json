@@ -5,6 +5,7 @@
   "admin/sheets-catalog-import.connected.text": "admin/sheets-catalog-import.connected.text",
   "admin/sheets-catalog-import.instructions": "admin/sheets-catalog-import.instructions",
   "admin/sheets-catalog-import.sheet-import.button": "admin/sheets-catalog-import.sheet-import.button",
+  "admin/sheets-catalog-import.sheet-import.error": "admin/sheets-catalog-import.sheet-import.error",
   "admin/sheets-catalog-import.connected-as": "admin/sheets-catalog-import.connected-as",
   "admin/sheets-catalog-import.disconnect.button": "admin/sheets-catalog-import.disconnect.button",
   "admin/sheets-catalog-import.setup.button": "admin/sheets-catalog-import.setup.button",
@@ -15,5 +16,7 @@
   "admin/sheets-catalog-import.clear-sheet.description": "admin/sheets-catalog-import.sheet-clear.description",
   "admin/sheets-catalog-import.create-sheet.button": "admin/sheets-catalog-import.create-sheet.button",
   "admin/sheets-catalog-import.clear-sheet.button": "admin/sheets-catalog-import.sheet-clear.button",
-  "admin/sheets-catalog-import.add-images.tooltip": "admin/sheets-catalog-import.add-images.tooltip"
+  "admin/sheets-catalog-import.sheet-clear.success": "admin/sheets-catalog-import.sheet-clear.success",
+  "admin/sheets-catalog-import.add-images.tooltip": "admin/sheets-catalog-import.add-images.tooltip",
+  "admin/sheets-catalog-import.add-images.success": "admin/sheets-catalog-import.add-images.success"
 }

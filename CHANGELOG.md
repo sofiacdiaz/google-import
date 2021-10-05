@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Admin menu action feedback
+
 ## [0.1.7] - 2021-09-02
 
 ### Changed

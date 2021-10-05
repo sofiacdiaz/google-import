@@ -4916,10 +4916,6 @@ verror@1.10.0:
   version "8.132.2"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.132.2/public/@types/vtex.render-runtime#e17dc097ba2b445771310cdbe9acd75af358b756"
 
-"vtex.sheets-catalog-import@https://sdb--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.sheets-catalog-import@0.1.7+build1632941428/public/@types/vtex.sheets-catalog-import":
-  version "0.1.7"
-  resolved "https://sdb--sandboxusdev.myvtex.com/_v/private/typings/linked/v1/vtex.sheets-catalog-import@0.1.7+build1632941428/public/@types/vtex.sheets-catalog-import#d25daa853c46d8c13bec88a5f1459d88b0dd4d15"
-
 "vtex.styleguide@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.0/public/@types/vtex.styleguide":
   version "9.145.0"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.styleguide@9.145.0/public/@types/vtex.styleguide#41dfb32af8756eb5528dbd452e47003a8f67fe8c"

@@ -4,6 +4,7 @@
   "admin/sheets-catalog-import.setup.description": "Please click the button below to grant this app access to your Google Drive.",
   "admin/sheets-catalog-import.connected.text": "Your Google account has been connected",
   "admin/sheets-catalog-import.sheet-import.button": "Process Sheet",
+  "admin/sheets-catalog-import.sheet-import.error": "{result} - See spreadsheet for error details",
   "admin/sheets-catalog-import.connected-as": "Connected to the account ",
   "admin/sheets-catalog-import.disconnect.button": "Disconnect",
   "admin/sheets-catalog-import.setup.button": "Grant Access",
@@ -14,7 +15,9 @@
   "admin/sheets-catalog-import.create-sheet.button": "Create Sheet",
   "admin/sheets-catalog-import.sheet-clear.description": "Clear Spreadsheet",
   "admin/sheets-catalog-import.sheet-clear.button": "Clear Sheet",
+  "admin/sheets-catalog-import.sheet-clear.success": "Spreadsheet cleared",
   "admin/sheets-catalog-import.add-images.description": "Add Image Links to Images Tab",
   "admin/sheets-catalog-import.add-images.button": "Add Images",
-  "admin/sheets-catalog-import.add-images.tooltip": "This feature only works if you are also using the VTEX Google Drive App, which creates a folder in your drive. You can use the folder titled NEW to add product images. These images will be prepopulated in your Google Catalog Import spreadsheet."
+  "admin/sheets-catalog-import.add-images.tooltip": "This feature only works if you are also using the VTEX Google Drive App, which creates a folder in your drive. You can use the folder titled NEW to add product images. These images will be prepopulated in your Google Catalog Import spreadsheet.",
+  "admin/sheets-catalog-import.add-images.success": "Images added"
 }
