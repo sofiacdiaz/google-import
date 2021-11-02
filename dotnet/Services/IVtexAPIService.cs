@@ -26,6 +26,6 @@ namespace SheetsCatalogImport.Services
         // Catalog V2
         Task<UpdateResponse> CreateProductV2(ProductRequestV2 createProductRequest);
         Task<UpdateResponse> UpdateProductV2(ProductRequestV2 updateProductRequest);
-        Task<GetBrandListV2Response> GetBrandListV2();
+        Task<GetBrandListV2Response> GetBrandListV2(string accountName);
     }
 }

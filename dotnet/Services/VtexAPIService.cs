@@ -3215,6 +3215,10 @@ namespace SheetsCatalogImport.Services
                 if(appSettings != null)
                 {
                     isCatalogV2 = appSettings.IsV2Catalog;
+                    if(!string.IsNullOrEmpty(appSettings.AccountName))
+                    {
+                        accountName = appSettings.AccountName;
+                    }
                 }
 
                 List<Value> updateBrandValueList = new List<Value>();
@@ -3222,7 +3226,7 @@ namespace SheetsCatalogImport.Services
 
                 if(isCatalogV2)
                 {
-                    GetBrandListV2Response brandList = await this.GetBrandListV2();
+                    GetBrandListV2Response brandList = await this.GetBrandListV2(accountName);
                     Array.Sort(brandList.Data, delegate(Datum x, Datum y) { return x.Name.CompareTo(y.Name); });
                     foreach(Datum data in brandList.Data)
                     {
@@ -3234,7 +3238,7 @@ namespace SheetsCatalogImport.Services
                         updateBrandValueList.Add(updateValue);
                     }
 
-                    GetCategoryListV2Response categoryList = await this.GetCategoryListV2();
+                    GetCategoryListV2Response categoryList = await this.GetCategoryListV2(accountName);
                     Array.Sort(categoryList.Roots, delegate(Root x, Root y) { return x.Value.Name.CompareTo(y.Value.Name); });
                     foreach(Root data in categoryList.Roots)
                     {
