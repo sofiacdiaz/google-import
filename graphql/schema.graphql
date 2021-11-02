@@ -8,8 +8,14 @@ type Mutation {
   revokeToken(accountName: String!): Boolean
   googleAuthorize: String
   createSheet: String
-  processSheet: String
+  processSheet: ProcessResult
   clearSheet: String
   addImages: String
   exportProducts(exportQuery: String!): String
+}
+
+type ProcessResult {
+  done: Int
+  error: Int
+  message: String
 }

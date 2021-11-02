@@ -9,7 +9,7 @@ namespace SheetsCatalogImport.Services
         //Task<bool> RevokeGoogleAuthorizationToken(Token token);
         //Task<Token> RefreshToken(string refreshToken);
 
-        Task<string> ProcessSheet();
+        Task<ProcessResult> ProcessSheet();
         Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest);
         Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest);
         Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels);

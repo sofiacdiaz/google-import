@@ -47,17 +47,18 @@ namespace SheetsCatalogImport.Services
                 $"{this._environmentVariableProvider.ApplicationVendor}.{this._environmentVariableProvider.ApplicationName}";
         }
 
-        public async Task<string> ProcessSheet()
+        public async Task<ProcessResult> ProcessSheet()
         {
             bool isCatalogV2 = false;
-            string response = string.Empty;
+            ProcessResult response = new ProcessResult();
 
             DateTime importStarted = await _sheetsCatalogImportRepository.CheckImportLock();
             TimeSpan elapsedTime = DateTime.Now - importStarted;
             if (elapsedTime.TotalHours < SheetsCatalogImportConstants.LOCK_TIMEOUT)
             {
                 _context.Vtex.Logger.Info("ProcessSheet", null, $"Blocked by lock.  Import started: {importStarted}");
-                return ($"Import started {importStarted} in progress.");
+                response.Message = $"Import started {importStarted} in progress.";
+                return response;
             }
 
             await _sheetsCatalogImportRepository.SetImportLock(DateTime.Now);
@@ -99,7 +100,8 @@ namespace SheetsCatalogImport.Services
                     if (string.IsNullOrEmpty(sheetContent))
                     {
                         //await ClearLockAfterDelay(5000);
-                        return ("Empty Spreadsheet Response.");
+                        response.Message = "Empty Spreadsheet Response.";
+                        return response;
                     }
 
                     GoogleSheet googleSheet = JsonConvert.DeserializeObject<GoogleSheet>(sheetContent);
@@ -1177,8 +1179,9 @@ namespace SheetsCatalogImport.Services
             }
 
             await _sheetsCatalogImportRepository.ClearImportLock();
-            response = $"Done: {doneCount} Error: {errorCount}";
-            _context.Vtex.Logger.Info("ProcessSheet", null, response);
+            response.Done = doneCount;
+            response.Error = errorCount;
+            _context.Vtex.Logger.Info("ProcessSheet", null, $"Done: {doneCount} Error: {errorCount}");
 
             return response;
         }
