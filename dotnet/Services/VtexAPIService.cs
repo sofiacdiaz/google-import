@@ -87,6 +87,10 @@ namespace SheetsCatalogImport.Services
                 if(appSettings != null)
                 {
                     isCatalogV2 = appSettings.IsV2Catalog;
+                    if(!string.IsNullOrEmpty(appSettings.AccountName))
+                    {
+                        accountName = appSettings.AccountName;
+                    }
                 }
 
                 var sheetIds = spreadsheets.Files.Select(s => s.Id);
@@ -256,7 +260,7 @@ namespace SheetsCatalogImport.Services
                                 //string brandId = "1";
                                 try
                                 {
-                                    GetBrandListV2Response getBrandList = await GetBrandListV2();
+                                    GetBrandListV2Response getBrandList = await GetBrandListV2(accountName);
                                     Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
                                     List<Datum> brandList = getBrandList.Data.Where(b => b.Name.Contains(brand, StringComparison.OrdinalIgnoreCase)).ToList();
                                     Console.WriteLine($"brandList: {brandList.Count}");
@@ -270,7 +274,7 @@ namespace SheetsCatalogImport.Services
                                 string categoryId = string.Empty;
                                 try
                                 {
-                                    GetCategoryListV2Response getCategoryList = await GetCategoryListV2();
+                                    GetCategoryListV2Response getCategoryList = await GetCategoryListV2(accountName);
                                     Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
                                     var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
                                     categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
@@ -1851,7 +1855,7 @@ namespace SheetsCatalogImport.Services
             return getBrandListResponse;
         }
 
-        public async Task<GetBrandListV2Response> GetBrandListV2()
+        public async Task<GetBrandListV2Response> GetBrandListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
 
@@ -1862,7 +1866,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/brands")
+                    RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/brands")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
@@ -1884,18 +1888,18 @@ namespace SheetsCatalogImport.Services
                 }
                 else
                 {
-                    _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list [{response.StatusCode}]");
+                    _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
                 }
             }
             catch (Exception ex)
             {
-                _context.Vtex.Logger.Error("GetBrandListV2", null, $"Error getting brand list", ex);
+                _context.Vtex.Logger.Error("GetBrandListV2", null, $"Error getting brand list '{accountName}'", ex);
             }
 
             return getBrandListResponse;
         }
 
-        public async Task<GetCategoryListV2Response> GetCategoryListV2()
+        public async Task<GetCategoryListV2Response> GetCategoryListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
 
@@ -1906,7 +1910,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/category-tree")
+                    RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/category-tree")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
@@ -1928,12 +1932,12 @@ namespace SheetsCatalogImport.Services
                 }
                 else
                 {
-                    _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list [{response.StatusCode}]");
+                    _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list '{accountName}' [{response.StatusCode}]");
                 }
             }
             catch (Exception ex)
             {
-                _context.Vtex.Logger.Error("GetCategoryListV2", null, $"Error getting category list", ex);
+                _context.Vtex.Logger.Error("GetCategoryListV2", null, $"Error getting category list '{accountName}'", ex);
             }
 
             return getCategoryList;
