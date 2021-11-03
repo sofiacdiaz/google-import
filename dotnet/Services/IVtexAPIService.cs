@@ -12,8 +12,8 @@ namespace SheetsCatalogImport.Services
         Task<ProcessResult> ProcessSheet();
         Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest);
         Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest);
-        Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels);
-        Task<GetBrandListResponse[]> GetBrandList();
+        Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName);
+        Task<GetBrandListResponse[]> GetBrandList(string accountName );
         Task<long[]> ListSkuIds(int page, int pagesize);
         Task<string> ExportToSheet(string query);
         Task<SearchTotals> SearchTotal(string query);

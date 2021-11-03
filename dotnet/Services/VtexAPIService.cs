@@ -162,6 +162,7 @@ namespace SheetsCatalogImport.Services
                         string productSpecField = null;
                         string productSpecValue = null;
                         string skuSpecs = null;
+                        string tradePolicyId = null;
                         string[] dataValues = googleSheet.ValueRanges[0].Values[index];
                         if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValues.Count())
                             productid = dataValues[headerIndexDictionary["productid"]];
@@ -223,6 +224,8 @@ namespace SheetsCatalogImport.Services
                             productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
                         if (headerIndexDictionary.ContainsKey("sku specs") && headerIndexDictionary["sku specs"] < dataValues.Count())
                             skuSpecs = dataValues[headerIndexDictionary["sku specs"]];
+                        if (headerIndexDictionary.ContainsKey("trade policy id") && headerIndexDictionary["trade policy id"] < dataValues.Count())
+                            tradePolicyId = dataValues[headerIndexDictionary["trade policy id"]];
 
                         string status = string.Empty;
                         if (headerIndexDictionary.ContainsKey("status") && headerIndexDictionary["status"] < dataValues.Count())
@@ -1125,6 +1128,17 @@ namespace SheetsCatalogImport.Services
                                 success &= skuUpdateResponse.Success;
                                 sb.AppendLine($"Activate Sku: [{skuUpdateResponse.StatusCode}] {skuUpdateResponse.Message}");
                             }
+
+                            if (success && !string.IsNullOrEmpty(tradePolicyId))
+                            {
+                                string[] tradePolicyIds = tradePolicyId.Split(',');
+                                foreach(string policyId in tradePolicyIds)
+                                {
+                                    UpdateResponse tradePolicyResponse = await this.CreateProductToTradePolicy(productid, policyId);
+                                    success &= tradePolicyResponse.Success;
+                                    sb.AppendLine($"Trade Policy Id '{tradePolicyId}': [{skuUpdateResponse.StatusCode}] {skuUpdateResponse.Message}");
+                                }
+                            }
                             
                             string result = success ? "Done" : "Error";
                             string[] arrLineValuesToWrite = new string[] { result, sb.ToString() };
@@ -1210,7 +1224,7 @@ namespace SheetsCatalogImport.Services
                 {
                     if (queryType.ToLower().Equals("category"))
                     {
-                        GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(10);
+                        GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(10, string.Empty);
                         Dictionary<long, string> categoryIds = await GetCategoryId(categoryTree);
                         categoryIds = categoryIds.Where(c => c.Value.Contains(queryParam, StringComparison.OrdinalIgnoreCase)).ToDictionary(c => c.Key, c => c.Value);
                         foreach (long categoryId in categoryIds.Keys)
@@ -1228,7 +1242,7 @@ namespace SheetsCatalogImport.Services
                     }
                     else if (queryType.ToLower().Equals("brand"))
                     {
-                        GetBrandListResponse[] brandList = await GetBrandList();
+                        GetBrandListResponse[] brandList = await GetBrandList(string.Empty);
                         List<GetBrandListResponse> brand = brandList.Where(b => b.Name.Contains(queryParam, StringComparison.OrdinalIgnoreCase)).ToList();
                     }
                     else if (queryType.ToLower().Equals("productid"))
@@ -1299,7 +1313,7 @@ namespace SheetsCatalogImport.Services
                     }
 
                     List<string> productIdsToExport = new List<string>();
-                    GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(10);
+                    GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(10, accountName);
                     Dictionary<long, string> categoryIds = await GetCategoryId(categoryTree);
                     //GetBrandListResponse[] brandList = await GetBrandList();
                     if (!string.IsNullOrEmpty(query))
@@ -1338,7 +1352,7 @@ namespace SheetsCatalogImport.Services
                         }
                         else if (queryType.ToLower().Equals("brand"))
                         {
-                            GetBrandListResponse[] brandList = await GetBrandList();
+                            GetBrandListResponse[] brandList = await GetBrandList(string.Empty);
                             List<GetBrandListResponse> brand = brandList.Where(b => b.Name.Contains(queryParam, StringComparison.OrdinalIgnoreCase)).ToList();
                         }
                         else if (queryType.ToLower().Equals("productid"))
@@ -1724,7 +1738,7 @@ namespace SheetsCatalogImport.Services
             return updateResponse;
         }
 
-        public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels)
+        public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/category/tree/categoryLevels
 
@@ -1732,14 +1746,22 @@ namespace SheetsCatalogImport.Services
 
             try
             {
+                if (string.IsNullOrEmpty(accountName))
+                {
+                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+                }
+
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pub/category/tree/{categoryLevels}")
+                    //RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pub/category/tree/{categoryLevels}")
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}")
+
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
                 if (authToken != null)
                 {
                     request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -1750,7 +1772,7 @@ namespace SheetsCatalogImport.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                
+                Console.WriteLine($"GetCategoryTree {accountName} {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
                 {
                     getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(responseContent);
@@ -1811,7 +1833,7 @@ namespace SheetsCatalogImport.Services
             return createCategoryResponse;
         }
 
-        public async Task<GetBrandListResponse[]> GetBrandList()
+        public async Task<GetBrandListResponse[]> GetBrandList(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/brand/list
 
@@ -1819,14 +1841,21 @@ namespace SheetsCatalogImport.Services
 
             try
             {
+                if(string.IsNullOrEmpty(accountName))
+                {
+                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+                }
+
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/brand/list")
+                    //RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/brand/list")
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
                 if (authToken != null)
                 {
                     request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -1837,7 +1866,7 @@ namespace SheetsCatalogImport.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetBrandList [{response.StatusCode}] {responseContent}");
+                Console.WriteLine($"GetBrandList [{response.StatusCode}] {accountName}");
                 if (response.IsSuccessStatusCode)
                 {
                     getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListResponse[]>(responseContent);
@@ -1858,6 +1887,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetBrandListV2Response> GetBrandListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
+            // portal.vtexcommercestable.com.br/api/whatever?an={accountName}
 
             GetBrandListV2Response getBrandListResponse = null;
 
@@ -1866,22 +1896,28 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/brands")
+                    //RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/brands")
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
                 if (authToken != null)
                 {
                     request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
                     request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
                     request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
                 }
+                else
+                {
+                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
+                }
 
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                
+                Console.WriteLine($"GetBrandListV2 {accountName} {response.StatusCode} {responseContent}");
                 if (response.IsSuccessStatusCode)
                 {
                     getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListV2Response>(responseContent);
@@ -1910,11 +1946,13 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/category-tree")
+                    //RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/category-tree")
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
                 if (authToken != null)
                 {
                     request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
@@ -1925,7 +1963,7 @@ namespace SheetsCatalogImport.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                //Console.WriteLine($"GetCategoryListV2: {responseContent}");
+                Console.WriteLine($"GetCategoryListV2 {accountName}: {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
                 {
                     getCategoryList = JsonConvert.DeserializeObject<GetCategoryListV2Response>(responseContent);
@@ -1937,6 +1975,7 @@ namespace SheetsCatalogImport.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"GetCategoryListV2 Error getting category list '{accountName}'");
                 _context.Vtex.Logger.Error("GetCategoryListV2", null, $"Error getting category list '{accountName}'", ex);
             }
 
@@ -2685,6 +2724,50 @@ namespace SheetsCatalogImport.Services
             return updateResponse;
         }
 
+        public async Task<UpdateResponse> CreateProductToTradePolicy(string productId, string tradepolicyId)
+        {
+            bool success = false;
+            string responseContent = string.Empty;
+            string statusCode = string.Empty;
+
+            try
+            {
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}"),
+                };
+
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+
+                success = response.IsSuccessStatusCode;
+                statusCode = response.StatusCode.ToString();
+                responseContent = await response.Content.ReadAsStringAsync();
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("CreateProductToTradePolicy", null, $"Error creating Trade Policy {tradepolicyId} for Product Id '{productId}'", ex);
+            }
+
+            UpdateResponse updateResponse = new UpdateResponse
+            {
+                Success = success,
+                Message = responseContent,
+                StatusCode = statusCode
+            };
+
+            return updateResponse;
+        }
+
         public async Task<string> ClearSheet()
         {
             string response = string.Empty;
@@ -3214,6 +3297,7 @@ namespace SheetsCatalogImport.Services
                 AppSettings appSettings = await _sheetsCatalogImportRepository.GetAppSettings();
                 if(appSettings != null)
                 {
+                    Console.WriteLine($" - APPSETTINGS {appSettings.AccountName} {appSettings.IsV2Catalog}");
                     isCatalogV2 = appSettings.IsV2Catalog;
                     if(!string.IsNullOrEmpty(appSettings.AccountName))
                     {
@@ -3224,11 +3308,11 @@ namespace SheetsCatalogImport.Services
                 List<Value> updateBrandValueList = new List<Value>();
                 List<Value> updateCategoryValueList = new List<Value>();
 
-                if(isCatalogV2)
+                if (isCatalogV2)
                 {
                     GetBrandListV2Response brandList = await this.GetBrandListV2(accountName);
-                    Array.Sort(brandList.Data, delegate(Datum x, Datum y) { return x.Name.CompareTo(y.Name); });
-                    foreach(Datum data in brandList.Data)
+                    Array.Sort(brandList.Data, delegate (Datum x, Datum y) { return x.Name.CompareTo(y.Name); });
+                    foreach (Datum data in brandList.Data)
                     {
                         Value updateValue = new Value
                         {
@@ -3236,11 +3320,12 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateBrandValueList.Add(updateValue);
+                        Console.WriteLine($" - updateBrandValueList V2 {updateValue.UserEnteredValue}");
                     }
 
                     GetCategoryListV2Response categoryList = await this.GetCategoryListV2(accountName);
-                    Array.Sort(categoryList.Roots, delegate(Root x, Root y) { return x.Value.Name.CompareTo(y.Value.Name); });
-                    foreach(Root data in categoryList.Roots)
+                    Array.Sort(categoryList.Roots, delegate (Root x, Root y) { return x.Value.Name.CompareTo(y.Value.Name); });
+                    foreach (Root data in categoryList.Roots)
                     {
                         Value updateValue = new Value
                         {
@@ -3248,24 +3333,12 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateCategoryValueList.Add(updateValue);
+                        Console.WriteLine($" - updateCategoryValueList V2 {updateValue.UserEnteredValue}");
                     }
-
-                    //GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(100);
-                    //Dictionary<long, string> categoryList = await GetCategoryId(categoryTree);
-                    //var sortedList = categoryList.OrderBy(d => d.Value).ToList();
-                    //foreach(KeyValuePair<long, string> kvp in sortedList)
-                    //{
-                    //    Value updateValue = new Value
-                    //    {
-                    //        UserEnteredValue = kvp.Value
-                    //    };
-
-                    //    updateCategoryValueList.Add(updateValue);
-                    //}
                 }
                 else
                 {
-                    GetBrandListResponse[] brandLists = await this.GetBrandList();
+                    GetBrandListResponse[] brandLists = await this.GetBrandList(accountName);
                     Array.Sort(brandLists, delegate(GetBrandListResponse x, GetBrandListResponse y) { return x.Name.CompareTo(y.Name); });
                     foreach(GetBrandListResponse brandList in brandLists)
                     {
@@ -3275,9 +3348,10 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateBrandValueList.Add(updateValue);
+                        Console.WriteLine($" - updateBrandValueList {updateValue.UserEnteredValue}");
                     }
 
-                    GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(100);
+                    GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(100, accountName);
                     Dictionary<long, string> categoryList = await GetCategoryId(categoryTree);
                     var sortedList = categoryList.OrderBy(d => d.Value).ToList();
                     foreach(KeyValuePair<long, string> kvp in sortedList)
@@ -3288,6 +3362,7 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateCategoryValueList.Add(updateValue);
+                        Console.WriteLine($" - updateCategoryValueList {updateValue.UserEnteredValue}");
                     }
                 }
 
