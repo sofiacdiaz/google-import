@@ -1,38 +1,106 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FC } from 'react'
-import React, { useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import { useMutation } from 'react-apollo'
 import { FormattedMessage } from 'react-intl'
 import { Alert, Button, Card, Divider } from 'vtex.styleguide'
 
 import M_PROCESS_SHEET from '../mutations/ProcessSheet.gql'
 
-const ProcessSheetButton: FC = () => {
-  const [showAlert, setShowAlert] = useState(true)
-  const [sheetImport, { loading: sheetProcessing, data: sheetProcessed }] =
-    useMutation(M_PROCESS_SHEET)
+interface AlertParams {
+  rowDone: number
+  rowErrors: number
+  showAlert: boolean
+  setShowAlert: React.Dispatch<React.SetStateAction<boolean>>
+}
 
-  const hasErrors = sheetProcessed?.processSheet.slice(-1) !== '0'
-  const displayAlert = !sheetProcessing && sheetProcessed && showAlert
+const successAlert = ({
+  rowDone,
+  rowErrors,
+  showAlert,
+  setShowAlert,
+}: AlertParams) => {
+  if (!showAlert) return null
+
+  if (rowDone === 0 && rowErrors !== 0) return null
+
+  return (
+    <Fragment>
+      <div className="mb2">
+        <Alert type="success" onClose={() => setShowAlert(false)}>
+          {/* If no error alert and no rows processed; give the user feedback that the process has run */}
+          {rowDone === 0 ? (
+            <FormattedMessage id="admin/sheets-catalog-import.sheet-import.no-change" />
+          ) : (
+            <FormattedMessage
+              id="admin/sheets-catalog-import.sheet-import.done"
+              values={{ done: rowDone }}
+            />
+          )}
+        </Alert>
+      </div>
+    </Fragment>
+  )
+}
+
+const errorAlert = ({
+  rowDone,
+  rowErrors,
+  showAlert,
+  setShowAlert,
+}: AlertParams) => {
+  if (rowErrors === 0 || !showAlert) return null
+
+  return (
+    <Fragment>
+      <div className="mb2">
+        <Alert type="error" onClose={() => setShowAlert(false)}>
+          {rowDone === 0 ? (
+            <FormattedMessage
+              id="admin/sheets-catalog-import.sheet-import.only-errors"
+              values={{ errors: rowErrors }}
+            />
+          ) : (
+            <FormattedMessage
+              id="admin/sheets-catalog-import.sheet-import.error"
+              values={{ errors: rowErrors }}
+            />
+          )}
+        </Alert>
+      </div>
+    </Fragment>
+  )
+}
+
+const ProcessSheetButton: FC = () => {
+  const [showSuccess, setShowSuccess] = useState(true)
+  const [showError, setShowError] = useState(true)
+  const [sheetImport, { loading: sheetProcessing, data: sheetProcessed }] =
+    useMutation<{
+      processSheet: { done: number; error: number; message: string }
+    }>(M_PROCESS_SHEET)
+
+  const rowErrors = sheetProcessed?.processSheet?.error ?? 0
+  const rowDone = sheetProcessed?.processSheet?.done ?? 0
+  const displayAlerts = !sheetProcessing && sheetProcessed
 
   return (
     <div>
-      {displayAlert && (
-        <div className="mb2">
-          <Alert
-            type={hasErrors ? 'warning' : 'success'}
-            onClose={() => setShowAlert(false)}
-          >
-            {hasErrors ? (
-              <FormattedMessage
-                id="admin/sheets-catalog-import.sheet-import.error"
-                values={{ result: sheetProcessed?.processSheet }}
-              />
-            ) : (
-              sheetProcessed.processSheet
-            )}
-          </Alert>
-        </div>
+      {displayAlerts && (
+        <Fragment>
+          {successAlert({
+            rowDone,
+            rowErrors,
+            showAlert: showSuccess,
+            setShowAlert: setShowSuccess,
+          })}
+          {errorAlert({
+            rowDone,
+            rowErrors,
+            showAlert: showError,
+            setShowAlert: setShowError,
+          })}
+        </Fragment>
       )}
       <Card>
         <div className="flex">
@@ -55,7 +123,8 @@ const ProcessSheetButton: FC = () => {
               isLoading={sheetProcessing}
               onClick={() => {
                 sheetImport()
-                setShowAlert(true)
+                setShowSuccess(true)
+                setShowError(true)
               }}
             >
               <FormattedMessage id="admin/sheets-catalog-import.sheet-import.button" />
