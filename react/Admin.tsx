@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FC } from 'react'
-import React from 'react'
+import React, { Fragment } from 'react'
 import { useRuntime } from 'vtex.render-runtime'
 import {
   Layout,
@@ -95,10 +95,10 @@ const Admin: FC = () => {
               {tokenCalled && !tokenLoading && tokenData?.haveToken === true && (
                 <div>
                   {ownerCalled && !ownerLoading && ownerData && (
-                    <p>
+                    <Fragment>
                       <FormattedMessage id="admin/sheets-catalog-import.connected-as" />{' '}
                       <strong>{`${ownerData.getOwnerEmail}`}</strong>
-                    </p>
+                    </Fragment>
                   )}
                   <div className="mt4 mb4 tr">
                     <Button

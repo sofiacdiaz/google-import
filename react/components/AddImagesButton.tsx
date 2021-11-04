@@ -38,24 +38,22 @@ const AddImagesButton: FC = () => {
       <Card>
         <div className="flex">
           <div className="w-70">
-            <p>
-              <div>
-                <span className="mr5">
-                  <FormattedMessage id="admin/sheets-catalog-import.add-images.description" />
+            <div>
+              <span className="mr5">
+                <FormattedMessage id="admin/sheets-catalog-import.add-images.description" />
+              </span>
+              <Tooltip
+                label={intl.formatMessage({
+                  id: 'admin/sheets-catalog-import.add-images.tooltip',
+                  defaultMessage:
+                    'This feature only works if you are also using the VTEX Google Drive App, which creates a folder in your drive. You can use the folder titled NEW to add product images. These images will be prepopulated in your Google Catalog Import spreadsheet.',
+                })}
+              >
+                <span className="ml-4 c-on-base pointer">
+                  <IconHelp />
                 </span>
-                <Tooltip
-                  label={intl.formatMessage({
-                    id: 'admin/sheets-catalog-import.add-images.tooltip',
-                    defaultMessage:
-                      'This feature only works if you are also using the VTEX Google Drive App, which creates a folder in your drive. You can use the folder titled NEW to add product images. These images will be prepopulated in your Google Catalog Import spreadsheet.',
-                  })}
-                >
-                  <span className="ml-4 c-on-base pointer">
-                    <IconHelp />
-                  </span>
-                </Tooltip>
-              </div>
-            </p>
+              </Tooltip>
+            </div>
           </div>
           <div
             style={{ flexGrow: 1 }}
