@@ -789,11 +789,11 @@ namespace SheetsCatalogImport.Services
                                     // 409 - Same link Id "There is already a product with the same LinkId with Product Id 100081169"
                                     if (productUpdateResponse.Message.Contains("Product already created with this Id"))
                                     {
+                                        productId = productRequest.Id ?? 0;
                                         success = true;
 
                                         if(doUpdate)
                                         {
-                                            productId = productRequest.Id ?? 0;
                                             //success = true;
                                             productUpdateResponse = await this.UpdateProduct(productid, productRequest);
                                             success = productUpdateResponse.Success;
@@ -1077,14 +1077,29 @@ namespace SheetsCatalogImport.Services
                                             string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                                             for (int i = 0; i < allSpecs.Length; i++)
                                             {
+                                                string groupName = "Default";
+                                                bool rootLevelSpecification = false;
                                                 string[] specsArr = allSpecs[i].Split(':');
                                                 string specName = specsArr[0];
+                                                if(specName.First().Equals('.'))
+                                                {
+                                                    rootLevelSpecification = true;
+                                                    specName = specName.Substring(1);
+                                                }
+
+                                                if(specName.Contains("!"))
+                                                {
+                                                    string[] specGroup = specName.Split('!');
+                                                    groupName = specGroup[0];
+                                                    specName = specGroup[1];
+                                                }
+                                                
                                                 string[] specValueArr = specsArr[1].Split(',');
 
                                                 SpecAttr prodSpec = new SpecAttr
                                                 {
-                                                    GroupName = "Default",
-                                                    RootLevelSpecification = true,
+                                                    GroupName = groupName,
+                                                    RootLevelSpecification = rootLevelSpecification,
                                                     FieldName = specName,
                                                     FieldValues = specValueArr
                                                 };
@@ -1116,16 +1131,31 @@ namespace SheetsCatalogImport.Services
                                             string[] allSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                                             for (int i = 0; i < allSpecs.Length; i++)
                                             {
+                                                string groupName = "Default";
+                                                bool rootLevelSpecification = false;
                                                 string[] specsArr = allSpecs[i].Split(':');
                                                 string specName = specsArr[0];
-                                                string specValue = specsArr[1];
+                                                if (specName.First().Equals('.'))
+                                                {
+                                                    rootLevelSpecification = true;
+                                                    specName = specName.Substring(1);
+                                                }
+
+                                                if (specName.Contains("!"))
+                                                {
+                                                    string[] specGroup = specName.Split('!');
+                                                    groupName = specGroup[0];
+                                                    specName = specGroup[1];
+                                                }
+
+                                                string[] specValueArr = specsArr[1].Split(',');
 
                                                 SpecAttr skuSpec = new SpecAttr
                                                 {
-                                                    GroupName = "Default",
-                                                    RootLevelSpecification = true,
+                                                    GroupName = groupName,
+                                                    RootLevelSpecification = rootLevelSpecification,
                                                     FieldName = specName,
-                                                    FieldValue = specValue
+                                                    FieldValues = specValueArr
                                                 };
 
                                                 UpdateResponse skuSpecResponse = await this.SetSkuSpec(skuid, skuSpec);
