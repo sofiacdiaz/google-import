@@ -23,12 +23,13 @@ import M_CREATE_SHEET from './mutations/CreateSheet.gql'
 import ProcessSheetButton from './components/ProcessSheetButton'
 import ClearSheetButton from './components/ClearSheetButton'
 import AddImagesButton from './components/AddImagesButton'
+import Settings from './components/Settings'
 
 const AUTH_URL = '/sheets-catalog-import/auth'
 
 const Admin: FC = () => {
   const { account, pages } = useRuntime()
-  const intl = useIntl()
+  const { formatMessage } = useIntl()
 
   const {
     loading: ownerLoading,
@@ -88,7 +89,7 @@ const Admin: FC = () => {
         <div className="flex justify-center">
           <div className="w-100 mw-reviews-header">
             <PageHeader
-              title={intl.formatMessage({
+              title={formatMessage({
                 id: 'admin/sheets-catalog-import.title',
               })}
             >
@@ -221,6 +222,9 @@ const Admin: FC = () => {
           {pages['admin.app.google-drive-import'] && showLink() && (
             <AddImagesButton />
           )}
+          <br />
+          {showLink() && <Settings />}
+          <br />
         </div>
       )}
     </Layout>

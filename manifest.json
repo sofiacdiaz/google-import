@@ -5,7 +5,8 @@
   "title": "Google Catalog Import",
   "description": "Update Catalog from Google Sheet",
   "dependencies": {
-    "vtex.styleguide": "9.x"
+    "vtex.styleguide": "9.x",
+    "vtex.apps-graphql": "2.x"
   },
   "settingsSchema": {
     "title": "Google Catalog Import",
@@ -40,9 +41,7 @@
       "url": "https://help-tickets.vtex.com/en/support?app=vtexus.sheets-catalog-import"
     },
     "type": "free",
-    "availableCountries": [
-      "*"
-    ]
+    "availableCountries": ["*"]
   },
   "policies": [
     {
