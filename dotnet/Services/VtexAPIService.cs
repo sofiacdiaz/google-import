@@ -364,8 +364,6 @@ namespace SheetsCatalogImport.Services
                                     }
                                 }
 
-                                Console.WriteLine($"productRequest.Id = '{productRequest.Id}'   ");
-
                                 // Add the sku for the current line, then check the next line and add sku if the the product is the same
                                 SkusSpec[] skusSpecs = null;
                                 if (!string.IsNullOrEmpty(skuSpecs))
@@ -376,8 +374,23 @@ namespace SheetsCatalogImport.Services
                                         skusSpecs = new SkusSpec[allSpecs.Length];
                                         for (int i = 0; i < allSpecs.Length; i++)
                                         {
+                                            string groupName = "Default";
+                                            bool rootLevelSpecification = false;
                                             string[] specsArr = allSpecs[i].Split(':');
                                             string specName = specsArr[0];
+                                            if (specName.First().Equals('.'))
+                                            {
+                                                rootLevelSpecification = true;
+                                                specName = specName.Substring(1);
+                                            }
+
+                                            if (specName.Contains("!"))
+                                            {
+                                                string[] specGroup = specName.Split('!');
+                                                groupName = specGroup[0];
+                                                specName = specGroup[1];
+                                            }
+
                                             string specValue = specsArr[1];
 
                                             SkusSpec skuSpec = new SkusSpec
@@ -400,7 +413,7 @@ namespace SheetsCatalogImport.Services
                                 Skus sku = new Skus
                                 {
                                     Id = skuid,
-                                    IsActive = false,
+                                    IsActive = activateSku,
                                     ExternalId = skuReferenceCode,
                                     Dimensions = new ProductV2Dimensions
                                     {
@@ -415,9 +428,7 @@ namespace SheetsCatalogImport.Services
                                     Specs = skusSpecs
                                 };
 
-                                Console.WriteLine("Adding Sku...");
                                 productRequest.Skus.Add(sku);
-                                Console.WriteLine("Added Sku.");
 
                                 //for(int lineNumber = index; lineNumber <= rowCount; lineNumber++)
                                 //{
@@ -566,15 +577,29 @@ namespace SheetsCatalogImport.Services
 
                                 if (!string.IsNullOrEmpty(productSpecs))
                                 {
-                                    Console.WriteLine(" - productSpecs - ");
                                     try
                                     {
                                         string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                                         productRequest.Specs = new ProductV2Spec[allSpecs.Length];
                                         for (int i = 0; i < allSpecs.Length; i++)
                                         {
+                                            string groupName = "Default";
+                                            bool rootLevelSpecification = false;
                                             string[] specsArr = allSpecs[i].Split(':');
                                             string specName = specsArr[0];
+                                            if (specName.First().Equals('.'))
+                                            {
+                                                rootLevelSpecification = true;
+                                                specName = specName.Substring(1);
+                                            }
+
+                                            if (specName.Contains("!"))
+                                            {
+                                                string[] specGroup = specName.Split('!');
+                                                groupName = specGroup[0];
+                                                specName = specGroup[1];
+                                            }
+
                                             string[] specValueArr = specsArr[1].Split(',');
 
                                             ProductV2Spec prodSpec = new ProductV2Spec
@@ -1835,7 +1860,7 @@ namespace SheetsCatalogImport.Services
                 {
                     Method = HttpMethod.Get,
                     //RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pub/category/tree/{categoryLevels}")
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}")
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}")
 
                 };
 
@@ -1852,7 +1877,8 @@ namespace SheetsCatalogImport.Services
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetCategoryTree {accountName} {response.StatusCode}");
+                //Console.WriteLine($"GetCategoryTree {accountName} [{response.StatusCode}] '{responseContent}'");
+                //_context.Vtex.Logger.Debug("GetCategoryTree", null, $"{responseContent}");
                 if (response.IsSuccessStatusCode)
                 {
                     getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(responseContent);
@@ -2881,9 +2907,11 @@ namespace SheetsCatalogImport.Services
                     SheetRange sheetRange = new SheetRange();
                     sheetRange.Ranges = new List<string>();
                     sheetRange.Ranges.Add($"A2:ZZ{SheetsCatalogImportConstants.DEFAULT_SHEET_SIZE}");
-                    var clearResponse = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
+                    response = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
                 }
             }
+
+            _context.Vtex.Logger.Info("ClearSheet", null, $"Sheet Cleared: '{response}'");
 
             return response;
         }
@@ -3347,7 +3375,6 @@ namespace SheetsCatalogImport.Services
             string sheetId = string.Empty;
             string importFolderId = null;
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-
             FolderIds folderIds = await _sheetsCatalogImportRepository.LoadFolderIds(accountName);
             if (folderIds != null)
             {
@@ -3376,9 +3403,8 @@ namespace SheetsCatalogImport.Services
                 bool isCatalogV2 = false;
                 bool useCatalogV1 = false;
                 AppSettings appSettings = await _sheetsCatalogImportRepository.GetAppSettings();
-                if(appSettings != null)
+                if (appSettings != null)
                 {
-                    Console.WriteLine($" - APPSETTINGS {appSettings.AccountName} {appSettings.IsV2Catalog}");
                     isCatalogV2 = appSettings.IsV2Catalog;
                     if(!string.IsNullOrEmpty(appSettings.AccountName))
                     {
@@ -3402,7 +3428,6 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateBrandValueList.Add(updateValue);
-                        Console.WriteLine($" - updateBrandValueList V2 {updateValue.UserEnteredValue}");
                     }
 
                     GetCategoryListV2Response categoryList = await this.GetCategoryListV2(accountName);
@@ -3415,7 +3440,6 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateCategoryValueList.Add(updateValue);
-                        Console.WriteLine($" - updateCategoryValueList V2 {updateValue.UserEnteredValue}");
                     }
                 }
                 else
@@ -3430,7 +3454,6 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateBrandValueList.Add(updateValue);
-                        Console.WriteLine($" - updateBrandValueList {updateValue.UserEnteredValue}");
                     }
 
                     GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(100, accountName);
@@ -3444,7 +3467,6 @@ namespace SheetsCatalogImport.Services
                         };
 
                         updateCategoryValueList.Add(updateValue);
-                        Console.WriteLine($" - updateCategoryValueList {updateValue.UserEnteredValue}");
                     }
                 }
 
@@ -3505,6 +3527,12 @@ namespace SheetsCatalogImport.Services
 
                 success = await _googleSheetsService.BatchUpdate(sheetId, batchUpdate);
             }
+            else
+            {
+                Console.WriteLine("NULL Sheet");
+            }
+
+            _context.Vtex.Logger.Info("SetBrandList", null, $"Set Brands and Categories [{success}]");
 
             return success;
         }

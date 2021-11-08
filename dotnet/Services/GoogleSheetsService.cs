@@ -1005,7 +1005,7 @@ namespace SheetsCatalogImport.Services
                         new string[] {""},
                         new string[] {"The required fields are category, brand, product name, product reference code, sku name, and product description"},
                         new string[] {"For categories, you can create a tree structure such as clothing/sweaters"},
-                        new string[] {"Product and SKU specs must be formatted properly. The correct formatting is key:value."},
+                        new string[] {"Product and SKU specs must be formatted properly. The correct formatting is\nkey:value\ngroup!key:value"},
                         new string[] {"If there are multiple specs, you can seperate them with a line break."},
                         new string[] {"Image links must be public to work properly."},
                         new string[] {"A sku must have an image to be active."},
@@ -1823,7 +1823,6 @@ namespace SheetsCatalogImport.Services
         public async Task<bool> BatchUpdate(string sheetId, BatchUpdate batchUpdate)
         {
             string result = await this.UpdateSpreadsheet(sheetId, batchUpdate);
-            Console.WriteLine($"BatchUpdate = '{result}");
             return true;
         }
     }

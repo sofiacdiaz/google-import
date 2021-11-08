@@ -41,7 +41,9 @@
       "url": "https://help-tickets.vtex.com/en/support?app=vtexus.sheets-catalog-import"
     },
     "type": "free",
-    "availableCountries": ["*"]
+    "availableCountries": [
+      "*"
+    ]
   },
   "policies": [
     {
