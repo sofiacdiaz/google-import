@@ -5,7 +5,8 @@
   "title": "Google Catalog Import",
   "description": "Update Catalog from Google Sheet",
   "dependencies": {
-    "vtex.styleguide": "9.x"
+    "vtex.styleguide": "9.x",
+    "vtex.apps-graphql": "2.x"
   },
   "settingsSchema": {
     "title": "Google Catalog Import",
@@ -15,6 +16,11 @@
         "title": "Catalog V2",
         "description": "Use V2 Catalog API",
         "type": "boolean"
+      },
+      "accountName": {
+        "title": "Account Name",
+        "description": "Account to use for Brands and Categories",
+        "type": "string"
       }
     }
   },
@@ -79,6 +85,13 @@
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",
         "path": "/api/catalog/*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "portal.vtexcommercestable.com.br",
+        "path": "/api/catalog2/*"
       }
     },
     {
@@ -155,7 +168,7 @@
       "name": "outbound-access",
       "attrs": {
         "host": "{{account}}.vtexcommercestable.com.br",
-        "path": "/api/catalogv2/products"
+        "path": "/api/catalogv2/*"
       }
     },
     {

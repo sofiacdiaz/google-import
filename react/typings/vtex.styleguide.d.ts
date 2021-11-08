@@ -40,4 +40,5 @@ declare module 'vtex.styleguide' {
   export const Tabs
   export const Divider
   export const IconHelp
+  export const Toggle
 }

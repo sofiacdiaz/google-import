@@ -9,11 +9,11 @@ namespace SheetsCatalogImport.Services
         //Task<bool> RevokeGoogleAuthorizationToken(Token token);
         //Task<Token> RefreshToken(string refreshToken);
 
-        Task<string> ProcessSheet();
+        Task<ProcessResult> ProcessSheet();
         Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest);
         Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest);
-        Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels);
-        Task<GetBrandListResponse[]> GetBrandList();
+        Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName);
+        Task<GetBrandListResponse[]> GetBrandList(string accountName );
         Task<long[]> ListSkuIds(int page, int pagesize);
         Task<string> ExportToSheet(string query);
         Task<SearchTotals> SearchTotal(string query);
@@ -26,6 +26,6 @@ namespace SheetsCatalogImport.Services
         // Catalog V2
         Task<UpdateResponse> CreateProductV2(ProductRequestV2 createProductRequest);
         Task<UpdateResponse> UpdateProductV2(ProductRequestV2 updateProductRequest);
-        Task<GetBrandListV2Response> GetBrandListV2();
+        Task<GetBrandListV2Response> GetBrandListV2(string accountName);
     }
 }

@@ -56,9 +56,9 @@ namespace SheetsCatalogImport.GraphQL
                 "clearSheet",
                 resolve: context =>
                 {
-                    var cleared = vtexAPIService.ClearSheet();;
+                    var cleared = vtexAPIService.ClearSheet();
                     var catalogAndBrand = vtexAPIService.SetBrandList();
-                    return cleared;
+                    return !string.IsNullOrWhiteSpace(cleared.Result) && catalogAndBrand.Result;
                 });
 
             Field<StringGraphType>(

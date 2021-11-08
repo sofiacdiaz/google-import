@@ -66,7 +66,7 @@
             }
 
             string responseContent = await response.Content.ReadAsStringAsync();
-            _context.Vtex.Logger.Info("LoadToken", null, responseContent);
+            //_context.Vtex.Logger.Debug("LoadToken", null, responseContent);
             Token token = JsonConvert.DeserializeObject<Token>(responseContent);
 
             return token;
@@ -116,7 +116,7 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            _context.Vtex.Logger.Info("LoadFolderIds", null, $"Account '{accountName}' [{response.StatusCode}] {responseContent}");
+            //_context.Vtex.Logger.Debug("LoadFolderIds", null, $"Account '{accountName}' [{response.StatusCode}] {responseContent}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -246,29 +246,35 @@
 
         public async Task<AppSettings> GetAppSettings()
         {
-            var request = new HttpRequestMessage
+            AppSettings appSettings = null;
+            try
             {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri($"http://apps.{this._environmentVariableProvider.Region}.vtex.io/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/apps/{SheetsCatalogImportConstants.APP_SETTINGS}/settings"),
-            };
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"http://apps.{this._environmentVariableProvider.Region}.vtex.io/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/apps/{SheetsCatalogImportConstants.APP_SETTINGS}/settings"),
+                };
 
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-            if (authToken != null)
-            {
-                request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                if (authToken != null)
+                {
+                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"GetAppSettings [{response.StatusCode}] {responseContent}");
+                if (response.IsSuccessStatusCode)
+                {
+                    appSettings = JsonConvert.DeserializeObject<AppSettings>(responseContent);
+                }
             }
-
-            var client = _clientFactory.CreateClient();
-            var response = await client.SendAsync(request);
-            string responseContent = await response.Content.ReadAsStringAsync();
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            catch(Exception ex)
             {
-                return null;
+                _context.Vtex.Logger.Error("GetAppSettings", null, "Error getting app settings", ex);
             }
-
-            AppSettings appSettings = JsonConvert.DeserializeObject<AppSettings>(responseContent);
 
             return appSettings;
         }

@@ -1,6 +1,7 @@
 {
   "stack": "dotnet",
   "memory": 512,
+  "timeout": 300,
   "minReplicas": 10,
   "maxReplicas": 100,
   "runtimeArgs": [

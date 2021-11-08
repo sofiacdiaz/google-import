@@ -147,7 +147,7 @@
         public async Task<IActionResult> GetCategoryTree()
         {
             Response.Headers.Add("Cache-Control", "no-cache");
-            return Json(await _vtexAPIService.GetCategoryTree(5));
+            return Json(await _vtexAPIService.GetCategoryTree(5, string.Empty));
         }
 
         public async Task ClearLock()
