@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Display detailed alerts after sheet is processed
+- Trade Policy column
+- Option to populate Categories & Brands from Marketplace
+
 ## [0.1.8] - 2021-10-05
 
 ### Added
