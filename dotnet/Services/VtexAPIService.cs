@@ -3413,8 +3413,8 @@ namespace SheetsCatalogImport.Services
                     }
                 }
 
-                List<Value> updateBrandValueList = new List<Value>();
-                List<Value> updateCategoryValueList = new List<Value>();
+                List<string> updateBrandValueList = new List<string>();
+                List<string> updateCategoryValueList = new List<string>();
 
                 if (isCatalogV2 && !useCatalogV1)
                 {
@@ -3422,24 +3422,14 @@ namespace SheetsCatalogImport.Services
                     Array.Sort(brandList.Data, delegate (Datum x, Datum y) { return x.Name.CompareTo(y.Name); });
                     foreach (Datum data in brandList.Data)
                     {
-                        Value updateValue = new Value
-                        {
-                            UserEnteredValue = data.Name
-                        };
-
-                        updateBrandValueList.Add(updateValue);
+                        updateBrandValueList.Add(data.Name);
                     }
 
                     GetCategoryListV2Response categoryList = await this.GetCategoryListV2(accountName);
                     Array.Sort(categoryList.Roots, delegate (Root x, Root y) { return x.Value.Name.CompareTo(y.Value.Name); });
                     foreach (Root data in categoryList.Roots)
                     {
-                        Value updateValue = new Value
-                        {
-                            UserEnteredValue = data.Value.Name
-                        };
-
-                        updateCategoryValueList.Add(updateValue);
+                        updateCategoryValueList.Add(data.Value.Name);
                     }
                 }
                 else
@@ -3448,12 +3438,7 @@ namespace SheetsCatalogImport.Services
                     Array.Sort(brandLists, delegate(GetBrandListResponse x, GetBrandListResponse y) { return x.Name.CompareTo(y.Name); });
                     foreach(GetBrandListResponse brandList in brandLists)
                     {
-                        Value updateValue = new Value
-                        {
-                            UserEnteredValue = brandList.Name
-                        };
-
-                        updateBrandValueList.Add(updateValue);
+                        updateBrandValueList.Add(brandList.Name);
                     }
 
                     GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(100, accountName);
@@ -3461,14 +3446,43 @@ namespace SheetsCatalogImport.Services
                     var sortedList = categoryList.OrderBy(d => d.Value).ToList();
                     foreach(KeyValuePair<long, string> kvp in sortedList)
                     {
-                        Value updateValue = new Value
-                        {
-                            UserEnteredValue = kvp.Value
-                        };
-
-                        updateCategoryValueList.Add(updateValue);
+                        updateCategoryValueList.Add(kvp.Value);
                     }
                 }
+
+                int writeBlockSize = Math.Max(updateBrandValueList.Count, updateCategoryValueList.Count);
+                string[][] arrayToWrite = new string[writeBlockSize][];
+                try
+                {
+                    for (int index = 0; index < writeBlockSize; index++)
+                    {
+                        string categoryName = string.Empty;
+                        string brandName = string.Empty;
+                        if (updateCategoryValueList.Count > index)
+                        {
+                            categoryName = updateCategoryValueList[index];
+                        }
+
+                        if (updateBrandValueList.Count > index)
+                        {
+                            brandName = updateBrandValueList[index];
+                        }
+
+                        arrayToWrite[index] = new string[] { categoryName, brandName };
+                    }
+                }
+                catch(Exception ex)
+                {
+                    _context.Vtex.Logger.Error("SetBrandList", null, $"Set Brands and Categories error", ex);
+                }
+
+                ValueRange valueRangeToWrite = new ValueRange
+                {
+                    Range = $"{SheetsCatalogImportConstants.SheetNames.VALIDATION}!A1:B{writeBlockSize}",
+                    Values = arrayToWrite
+                };
+
+                UpdateValuesResponse writeToSheetResult = await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
 
                 BatchUpdate batchUpdate = new BatchUpdate
                 {
@@ -3490,8 +3504,14 @@ namespace SheetsCatalogImport.Services
                                 {
                                     Condition = new Condition
                                     {
-                                        Type = "ONE_OF_LIST",
-                                        Values = updateCategoryValueList.ToArray()
+                                        Type = "ONE_OF_RANGE",
+                                        Values = new Value[]
+                                        {
+                                            new Value
+                                            {
+                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$A$1:$A${updateCategoryValueList.Count}"
+                                            }
+                                        }
                                     },
                                     InputMessage = $"Choose Category",
                                     Strict = false
@@ -3514,8 +3534,14 @@ namespace SheetsCatalogImport.Services
                                 {
                                     Condition = new Condition
                                     {
-                                        Type = "ONE_OF_LIST",
-                                        Values = updateBrandValueList.ToArray()
+                                        Type = "ONE_OF_RANGE",
+                                        Values = new Value[]
+                                        {
+                                            new Value
+                                            {
+                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$B$1:$B${updateBrandValueList.Count}"
+                                            }
+                                        }
                                     },
                                     InputMessage = $"Choose Brand",
                                     Strict = false
@@ -3526,13 +3552,14 @@ namespace SheetsCatalogImport.Services
                 };
 
                 success = await _googleSheetsService.BatchUpdate(sheetId, batchUpdate);
+                //_context.Vtex.Logger.Debug("SetBrandList", null, $"Set Brands and Categories [{success}] {JsonConvert.SerializeObject(batchUpdate)}");
             }
             else
             {
                 Console.WriteLine("NULL Sheet");
             }
 
-            _context.Vtex.Logger.Info("SetBrandList", null, $"Set Brands and Categories [{success}]");
+            _context.Vtex.Logger.Info("SetBrandList", null, $"Set Brands and Categories [{success}] ");
 
             return success;
         }
