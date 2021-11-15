@@ -785,6 +785,7 @@ namespace SheetsCatalogImport.Services
             string sheetLabel = SheetsCatalogImportConstants.SheetNames.PRODUCTS;
             string instructionsLabel = SheetsCatalogImportConstants.SheetNames.INSTRUCTIONS;
             string imagesLabel = SheetsCatalogImportConstants.SheetNames.IMAGES;
+            string validationLabel = SheetsCatalogImportConstants.SheetNames.VALIDATION;
             string[] headerRowLabels = SheetsCatalogImportConstants.HEADER.Split(',').Select(str => str.Trim()).ToArray();
 
             int headerIndex = 0;
@@ -958,6 +959,21 @@ namespace SheetsCatalogImport.Services
                             {
                                 ColumnCount = 3,
                                 RowCount = 500
+                            },
+                            SheetType = "GRID"
+                        }
+                    },
+                    new Sheet
+                    {
+                        Properties = new SheetProperties
+                        {
+                            SheetId = 3,
+                            Title = validationLabel,
+                            Index = 3,
+                            GridProperties = new GridProperties
+                            {
+                                ColumnCount = 2,
+                                RowCount = 100000
                             },
                             SheetType = "GRID"
                         }
@@ -1431,7 +1447,8 @@ namespace SheetsCatalogImport.Services
                         {
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
-                                _context.Vtex.Logger.Warn("WriteSpreadsheetValues", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                //_context.Vtex.Logger.Warn("WriteSpreadsheetValues", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                _context.Vtex.Logger.Warn("WriteSpreadsheetValues", null, $"Retrying [{response.StatusCode}] {responseContent} ");
                                 await Task.Delay(1000 * 60);
                                 client = _clientFactory.CreateClient();
                                 response = await client.SendAsync(request);
@@ -1442,18 +1459,20 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else
                                 {
-                                    _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                    //_context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                    _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Did not update sheet [{response.StatusCode}] {responseContent} ");
                                 }
                             }
                             else
                             {
-                                _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"[{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                //_context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"[{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"[{response.StatusCode}] {responseContent} ");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"{jsonSerializedMetadata}", ex);
+                        _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Error writing to Sheet", ex);
                     }
                 }
                 else
@@ -1504,7 +1523,8 @@ namespace SheetsCatalogImport.Services
                         {
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
-                                _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                //_context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Retrying [{response.StatusCode}] {responseContent} ");
                                 await Task.Delay(1000 * 60);
                                 client = _clientFactory.CreateClient();
                                 response = await client.SendAsync(request);
@@ -1514,18 +1534,21 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else
                                 {
-                                    _context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                    //_context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                    _context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"Did not update sheet [{response.StatusCode}] {responseContent} ");
                                 }
                             }
                             else
                             {
-                                _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Did not update sheet. [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                //_context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Did not update sheet. [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
+                                _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Did not update sheet. [{response.StatusCode}] {responseContent} ");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"{jsonSerializedMetadata}", ex);
+                        //_context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"{jsonSerializedMetadata}", ex);
+                        _context.Vtex.Logger.Error("UpdateSpreadsheet", null, "Update Error", ex);
                     }
                 }
                 else

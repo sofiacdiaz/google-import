@@ -93,6 +93,7 @@ namespace SheetsCatalogImport.Data
             public const string PRODUCTS = "ProductsForImport";
             public const string INSTRUCTIONS = "Instructions";
             public const string IMAGES = "Images";
+            public const string VALIDATION = "Validation";
         }
 
         public class ProductDisplayModes
