@@ -87,10 +87,10 @@ namespace SheetsCatalogImport.Services
                 if(appSettings != null)
                 {
                     isCatalogV2 = appSettings.IsV2Catalog;
-                    if(!string.IsNullOrEmpty(appSettings.AccountName))
-                    {
-                        accountName = appSettings.AccountName;
-                    }
+                    //if(!string.IsNullOrEmpty(appSettings.AccountName))
+                    //{
+                    //    accountName = appSettings.AccountName;
+                    //}
                 }
 
                 var sheetIds = spreadsheets.Files.Select(s => s.Id);
@@ -264,10 +264,22 @@ namespace SheetsCatalogImport.Services
                                 try
                                 {
                                     GetBrandListV2Response getBrandList = await GetBrandListV2(accountName);
-                                    Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
-                                    List<Datum> brandList = getBrandList.Data.Where(b => b.Name.Contains(brand, StringComparison.OrdinalIgnoreCase)).ToList();
-                                    Console.WriteLine($"brandList: {brandList.Count}");
-                                    brandId = brandList.Select(b => b.Id).FirstOrDefault().ToString();
+                                    if (getBrandList != null)
+                                    {
+                                        Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
+                                        List<Datum> brandList = getBrandList.Data.Where(b => b.Name.Contains(brand, StringComparison.OrdinalIgnoreCase)).ToList();
+                                        Console.WriteLine($"brandList: {brandList.Count}");
+                                        brandId = brandList.Select(b => b.Id).FirstOrDefault().ToString();
+                                    }
+
+                                    if(string.IsNullOrEmpty(brandId))
+                                    {
+                                        CreateBrandV2Response createBrandV2Response = await this.CreateBrandV2(brand);
+                                        if(createBrandV2Response != null)
+                                        {
+                                            brandId = createBrandV2Response.Id;
+                                        }
+                                    }
                                 }
                                 catch(Exception ex)
                                 {
@@ -278,9 +290,21 @@ namespace SheetsCatalogImport.Services
                                 try
                                 {
                                     GetCategoryListV2Response getCategoryList = await GetCategoryListV2(accountName);
-                                    Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
-                                    var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
-                                    categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
+                                    if (getCategoryList != null)
+                                    {
+                                        Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
+                                        var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
+                                        categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
+                                    }
+
+                                    if (string.IsNullOrEmpty(categoryId))
+                                    {
+                                        CreateCategoryV2Response createCategoryV2Response = await this.CreateCategoryV2(category);
+                                        if (createCategoryV2Response != null && createCategoryV2Response.Value != null)
+                                        {
+                                            categoryId = createCategoryV2Response.Value.Id;
+                                        }
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -2041,6 +2065,62 @@ namespace SheetsCatalogImport.Services
             return getBrandListResponse;
         }
 
+        public async Task<CreateBrandV2Response> CreateBrandV2(string brandName)
+        {
+            CreateBrandV2Response createBrandV2Response = null;
+            CreateBrandV2Request createBrandV2Request = new CreateBrandV2Request
+            {
+                Name = brandName,
+                IsActive = true
+            };
+
+            try
+            {
+                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+                string jsonSerializedData = JsonConvert.SerializeObject(createBrandV2Request);
+
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}"),
+                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
+                };
+
+                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
+                if (authToken != null)
+                {
+                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+                else
+                {
+                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"CreateBrandV2 {accountName} {response.StatusCode} {responseContent}");
+                if (response.IsSuccessStatusCode)
+                {
+                    createBrandV2Response = JsonConvert.DeserializeObject<CreateBrandV2Response>(responseContent);
+                }
+                else
+                {
+                    _context.Vtex.Logger.Warn("CreateBrandV2", null, $"Could not create brand '{brandName}' [{response.StatusCode}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("CreateBrandV2", null, $"Error creating brand '{brandName}'", ex);
+            }
+
+            return createBrandV2Response;
+        }
+
         public async Task<GetCategoryListV2Response> GetCategoryListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
@@ -2086,6 +2166,61 @@ namespace SheetsCatalogImport.Services
             }
 
             return getCategoryList;
+        }
+
+        public async Task<CreateCategoryV2Response> CreateCategoryV2(string categoryName)
+        {
+            CreateCategoryV2Response createCategoryV2Response = null;
+            CreateCategoryV2Request createCategoryV2Request = new CreateCategoryV2Request
+            {
+                Name = categoryName
+            };
+
+            try
+            {
+                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+                string jsonSerializedData = JsonConvert.SerializeObject(createCategoryV2Request);
+
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}"),
+                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
+                };
+
+                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
+                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+                string authToken = _context.Vtex.AdminUserAuthToken;
+                if (authToken != null)
+                {
+                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+                }
+                else
+                {
+                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
+                }
+
+                var client = _clientFactory.CreateClient();
+                var response = await client.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"CreateCategoryV2 {accountName} {response.StatusCode} {responseContent}");
+                if (response.IsSuccessStatusCode)
+                {
+                    createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(responseContent);
+                }
+                else
+                {
+                    _context.Vtex.Logger.Warn("CreateCategoryV2", null, $"Could not create brand '{categoryName}' [{response.StatusCode}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("CreateCategoryV2", null, $"Error creating brand '{categoryName}'", ex);
+            }
+
+            return createCategoryV2Response;
         }
 
         public async Task<GetProductByIdResponse> GetProductById(string productId)
