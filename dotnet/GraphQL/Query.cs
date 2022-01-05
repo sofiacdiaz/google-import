@@ -40,14 +40,21 @@ namespace SheetsCatalogImport.GraphQL
                         FolderIds folderIds = await sheetsCatalogImportRepository.LoadFolderIds(accountName);
                         if (folderIds != null)
                         {
-                            productsFolderId = folderIds.ProductsFolderId;
-                            ListFilesResponse listFilesResponse = await googleSheetsService.ListSheetsInFolder(productsFolderId);
-                            if (listFilesResponse != null)
+                            if (!string.IsNullOrEmpty(folderIds.FolderOwner))
                             {
-                                var owners = listFilesResponse.Files.Select(o => o.Owners.Distinct()).FirstOrDefault();
-                                if (owners != null)
+                                email = folderIds.FolderOwner;
+                            }
+                            else
+                            {
+                                productsFolderId = folderIds.ProductsFolderId;
+                                ListFilesResponse listFilesResponse = await googleSheetsService.ListSheetsInFolder(productsFolderId);
+                                if (listFilesResponse != null)
                                 {
-                                    email = owners.Select(o => o.EmailAddress).FirstOrDefault();
+                                    var owners = listFilesResponse.Files.Select(o => o.Owners.Distinct()).FirstOrDefault();
+                                    if (owners != null)
+                                    {
+                                        email = owners.Select(o => o.EmailAddress).FirstOrDefault();
+                                    }
                                 }
                             }
                         }
