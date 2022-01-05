@@ -1338,6 +1338,16 @@ namespace SheetsCatalogImport.Services
                         ProductsFolderId = productsFolderId
                     };
 
+                    ListFilesResponse listFilesResponse = await this.ListSheetsInFolder(productsFolderId);
+                    if (listFilesResponse != null)
+                    {
+                        var owners = listFilesResponse.Files.Select(o => o.Owners.Distinct()).FirstOrDefault();
+                        if (owners != null)
+                        {
+                            folderIds.FolderOwner = owners.Select(o => o.EmailAddress).FirstOrDefault();
+                        }
+                    }
+
                     await _sheetsCatalogImportRepository.SaveFolderIds(folderIds, accountName);
                 }
 
@@ -1738,6 +1748,16 @@ namespace SheetsCatalogImport.Services
                     ImportFolderId = importFolderId,
                     ProductsFolderId = productsFolderId
                 };
+
+                ListFilesResponse listFilesResponse = await this.ListSheetsInFolder(productsFolderId);
+                if (listFilesResponse != null)
+                {
+                    var owners = listFilesResponse.Files.Select(o => o.Owners.Distinct()).FirstOrDefault();
+                    if (owners != null)
+                    {
+                        folderIds.FolderOwner = owners.Select(o => o.EmailAddress).FirstOrDefault();
+                    }
+                }
 
                 await _sheetsCatalogImportRepository.SaveFolderIds(folderIds, accountName);
             }

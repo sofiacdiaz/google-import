@@ -266,10 +266,17 @@ namespace SheetsCatalogImport.Services
                                     GetBrandListV2Response getBrandList = await GetBrandListV2(accountName);
                                     if (getBrandList != null)
                                     {
-                                        Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
+                                        //Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
                                         List<Datum> brandList = getBrandList.Data.Where(b => b.Name.Contains(brand, StringComparison.OrdinalIgnoreCase)).ToList();
-                                        Console.WriteLine($"brandList: {brandList.Count}");
-                                        brandId = brandList.Select(b => b.Id).FirstOrDefault().ToString();
+                                        //Console.WriteLine($"brandList: {brandList.Count}");
+                                        try
+                                        {
+                                            brandId = brandList.Select(b => b.Id).FirstOrDefault().ToString();
+                                        }
+                                        catch(Exception ex)
+                                        {
+                                            _context.Vtex.Logger.Error("ProcessSheet", "BrandV2", $"Error getting Brand Id for '{brand}' ", ex);
+                                        }
                                     }
 
                                     if(string.IsNullOrEmpty(brandId))
@@ -278,12 +285,19 @@ namespace SheetsCatalogImport.Services
                                         if(createBrandV2Response != null)
                                         {
                                             brandId = createBrandV2Response.Id;
+                                            _context.Vtex.Logger.Info("ProcessSheet", "BrandV2", $"Created Brand '{brand}' {brandId}");
+                                            sb.AppendLine($"Created Brand '{brand}' Id: {brandId}");
+                                        }
+                                        else
+                                        {
+                                            _context.Vtex.Logger.Info("ProcessSheet", "BrandV2", $"Failed to create Brand '{brand}' {brandId}");
                                         }
                                     }
                                 }
                                 catch(Exception ex)
                                 {
-                                    Console.WriteLine($"Brand ERROR: {ex.Message}");
+                                    //Console.WriteLine($"Brand ERROR: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", "BrandV2", $"Error with Brand '{brand}' {brandId}", ex);
                                 }
 
                                 string categoryId = string.Empty;
@@ -292,9 +306,16 @@ namespace SheetsCatalogImport.Services
                                     GetCategoryListV2Response getCategoryList = await GetCategoryListV2(accountName);
                                     if (getCategoryList != null)
                                     {
-                                        Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
+                                        //Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
                                         var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
-                                        categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
+                                        try
+                                        {
+                                            categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
+                                        }
+                                        catch(Exception ex)
+                                        {
+                                            _context.Vtex.Logger.Error("ProcessSheet", "CategoryV2", $"Error getting Category Id for '{category}' ", ex);
+                                        }
                                     }
 
                                     if (string.IsNullOrEmpty(categoryId))
@@ -303,21 +324,28 @@ namespace SheetsCatalogImport.Services
                                         if (createCategoryV2Response != null && createCategoryV2Response.Value != null)
                                         {
                                             categoryId = createCategoryV2Response.Value.Id;
+                                            _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Created Category '{category}' {categoryId}");
+                                            sb.AppendLine($"Created Category '{category}' Id: {categoryId}");
+                                        }
+                                        else
+                                        {
+                                            _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Failed to create Category '{category}' {categoryId}");
                                         }
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Category ERROR: {ex.Message}");
+                                    //Console.WriteLine($"Category ERROR: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", "CategoryV2", $"Error with Category '{category}' {categoryId}", ex);
                                 }
 
                                 ProductRequestV2 productRequest = new ProductRequestV2
                                 {
-                                    Id = productid,
+                                    Id = string.IsNullOrWhiteSpace(productid) ? null : productid,
                                     Name = productName,
                                     CategoryPath = category,
                                     BrandName = brand,
-                                    ExternalId = productReferenceCode,
+                                    ExternalId = string.IsNullOrWhiteSpace(productReferenceCode) ? null : productReferenceCode,
                                     Description = productDescription,
                                     //KeyWords = searchKeywords,
                                     //MetaTagDescription = metaTagDescription,
@@ -380,7 +408,7 @@ namespace SheetsCatalogImport.Services
                                     {
                                         productRequest.Id = previousProductId;
                                         sb.AppendLine($"Setting product id to '{previousProductId}'");
-                                        Console.WriteLine($"Setting product id to '{previousProductId}'");
+                                        //Console.WriteLine($"Setting product id to '{previousProductId}'");
                                     }
                                     else
                                     {
@@ -434,25 +462,32 @@ namespace SheetsCatalogImport.Services
                                     }
                                 }
 
-                                Skus sku = new Skus
+                                if (string.IsNullOrEmpty(skuName) && string.IsNullOrEmpty(skuid))
                                 {
-                                    Id = skuid,
-                                    IsActive = activateSku,
-                                    ExternalId = skuReferenceCode,
-                                    Dimensions = new ProductV2Dimensions
+                                    sb.AppendLine("Missing sku info");
+                                }
+                                else
+                                {
+                                    Skus sku = new Skus
                                     {
-                                        Height = await ParseDouble(height),
-                                        Length = await ParseDouble(length),
-                                        Width = await ParseDouble(width),
-                                    },
-                                    Weight = await ParseDouble(weight),
-                                    Sellers = new Seller[] { },
-                                    Name = skuName,
-                                    Ean = skuEanGtin,
-                                    Specs = skusSpecs
-                                };
+                                        Id = skuid,
+                                        IsActive = activateSku,
+                                        ExternalId = skuReferenceCode,
+                                        Dimensions = new ProductV2Dimensions
+                                        {
+                                            Height = await ParseDouble(height),
+                                            Length = await ParseDouble(length),
+                                            Width = await ParseDouble(width),
+                                        },
+                                        Weight = await ParseDouble(weight),
+                                        Sellers = new Seller[] { },
+                                        Name = skuName,
+                                        Ean = skuEanGtin,
+                                        Specs = skusSpecs
+                                    };
 
-                                productRequest.Skus.Add(sku);
+                                    productRequest.Skus.Add(sku);
+                                }
 
                                 //for(int lineNumber = index; lineNumber <= rowCount; lineNumber++)
                                 //{
@@ -551,7 +586,7 @@ namespace SheetsCatalogImport.Services
 
                                 if (!string.IsNullOrEmpty(searchKeywords) && !string.IsNullOrEmpty(metaTagDescription))
                                 {
-                                    Console.WriteLine("Search Keywords & Metatag Description");
+                                    //Console.WriteLine("Search Keywords & Metatag Description");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
@@ -572,7 +607,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else if(string.IsNullOrEmpty(searchKeywords))
                                 {
-                                    Console.WriteLine("Search Keywords only");
+                                    //Console.WriteLine("Search Keywords only");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
@@ -586,7 +621,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else if (!string.IsNullOrEmpty(metaTagDescription))
                                 {
-                                    Console.WriteLine("Metatag Description only");
+                                    //Console.WriteLine("Metatag Description only");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
@@ -674,7 +709,7 @@ namespace SheetsCatalogImport.Services
 
                                 try
                                 {
-                                    Console.WriteLine(" - imagesList - ");
+                                    //Console.WriteLine(" - imagesList - ");
                                     List<ProductV2Image> imagesList = new List<ProductV2Image>();
                                     if(!string.IsNullOrEmpty(imageUrl1))
                                     {
@@ -741,7 +776,7 @@ namespace SheetsCatalogImport.Services
                                                 }
                                                 catch (Exception ex)
                                                 {
-                                                    Console.WriteLine($"Response Parse Error: {ex.Message}");
+                                                    //Console.WriteLine($"Response Parse Error: {ex.Message}");
                                                     sb.AppendLine($"Response Parse Error: {ex.Message}");
                                                 }
                                             }
