@@ -338,29 +338,29 @@ namespace SheetsCatalogImport.Services
                                 {
                                     try
                                     {
-                                        string[] allSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                        skusSpecs = new SkusSpec[allSpecs.Length];
-                                        for (int i = 0; i < allSpecs.Length; i++)
+                                        string[] allSkuSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                        skusSpecs = new SkusSpec[allSkuSpecs.Length];
+                                        for (int i = 0; i < allSkuSpecs.Length; i++)
                                         {
-                                            string[] specsArr = allSpecs[i].Split(':');
-                                            string specName = specsArr[0];
-                                            if (specName.First().Equals('.'))
+                                            string[] skuSpecsArr = allSkuSpecs[i].Split(':');
+                                            string skuSpecName = skuSpecsArr[0];
+                                            if (skuSpecName.First().Equals('.'))
                                             {
-                                                specName = specName.Substring(1);
+                                                skuSpecName = skuSpecName.Substring(1);
                                             }
 
-                                            if (specName.Contains("!"))
+                                            if (skuSpecName.Contains("!"))
                                             {
-                                                string[] specGroup = specName.Split('!');
-                                                specName = specGroup[1];
+                                                string[] skuSpecGroup = skuSpecName.Split('!');
+                                                skuSpecName = skuSpecGroup[1];
                                             }
 
-                                            string specValue = specsArr[1];
+                                            string skuSpecValue = skuSpecsArr[1];
 
                                             SkusSpec skuSpec = new SkusSpec
                                             {
-                                                Name = specName,
-                                                Value = specValue
+                                                Name = skuSpecName,
+                                                Value = skuSpecValue
                                             };
 
                                             skusSpecs[i] = skuSpec;
@@ -457,28 +457,28 @@ namespace SheetsCatalogImport.Services
                                 {
                                     try
                                     {
-                                        string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                        productRequest.Specs = new ProductV2Spec[allSpecs.Length];
-                                        for (int i = 0; i < allSpecs.Length; i++)
+                                        string[] allProdSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                        productRequest.Specs = new ProductV2Spec[allProdSpecs.Length];
+                                        for (int i = 0; i < allProdSpecs.Length; i++)
                                         {
-                                            string[] specsArr = allSpecs[i].Split(':');
-                                            string specName = specsArr[0];
-                                            if (specName.First().Equals('.'))
+                                            string[] prodSpecsArr = allProdSpecs[i].Split(':');
+                                            string prodSpecName = prodSpecsArr[0];
+                                            if (prodSpecName.First().Equals('.'))
                                             {
-                                                specName = specName.Substring(1);
+                                                prodSpecName = prodSpecName.Substring(1);
                                             }
 
-                                            if (specName.Contains("!"))
+                                            if (prodSpecName.Contains("!"))
                                             {
-                                                string[] specGroup = specName.Split('!');
-                                                specName = specGroup[1];
+                                                string[] prodSpecGroup = prodSpecName.Split('!');
+                                                prodSpecName = prodSpecGroup[1];
                                             }
 
-                                            string[] specValueArr = specsArr[1].Split(',');
+                                            string[] specValueArr = prodSpecsArr[1].Split(',');
 
                                             ProductV2Spec prodSpec = new ProductV2Spec
                                             {
-                                                Name = specName,
+                                                Name = prodSpecName,
                                                 Values = specValueArr
                                             };
 
@@ -553,18 +553,7 @@ namespace SheetsCatalogImport.Services
                                         productV2Response = await this.CreateProductV2(productRequest);
                                         if (productV2Response != null)
                                         {
-                                            if (productV2Response.Success)
-                                            {
-                                                try
-                                                {
-                                                    ProductResponseV2 productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(productV2Response.Message);
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    sb.AppendLine($"Response Parse Error: {ex.Message}");
-                                                }
-                                            }
-                                            else
+                                            if (!productV2Response.Success)
                                             {
                                                 if (productV2Response.StatusCode.Equals("Conflict") && doUpdate)
                                                 {
