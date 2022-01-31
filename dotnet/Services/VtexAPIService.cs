@@ -120,7 +120,6 @@ namespace SheetsCatalogImport.Services
                     string statusColumnLetter = await GetColumnLetter(headerIndexDictionary["status"]);
                     string messageColumnLetter = await GetColumnLetter(headerIndexDictionary["message"]);
 
-                    string previousProductId = string.Empty;
                     for (int index = 1; index < rowCount; index++)
                     {
                         success = true;
@@ -333,21 +332,6 @@ namespace SheetsCatalogImport.Services
                                     Skus = new List<Skus>()
                                 };
 
-                                Console.WriteLine($"       PRODUCT ID [{productRequest.Id}]      ");
-
-                                if(string.IsNullOrEmpty(productRequest.Id) && !string.IsNullOrEmpty(previousProductId))
-                                {
-                                    if(await this.PreviousLineIsSameProduct(headerIndexDictionary, googleSheet.ValueRanges[0].Values, index))
-                                    {
-                                        productRequest.Id = previousProductId;
-                                        sb.AppendLine($"Setting product id to '{previousProductId}'");
-                                    }
-                                    else
-                                    {
-                                        previousProductId = string.Empty;
-                                    }
-                                }
-
                                 // Add the sku for the current line, then check the next line and add sku if the the product is the same
                                 SkusSpec[] skusSpecs = null;
                                 if (!string.IsNullOrEmpty(skuSpecs))
@@ -358,20 +342,16 @@ namespace SheetsCatalogImport.Services
                                         skusSpecs = new SkusSpec[allSpecs.Length];
                                         for (int i = 0; i < allSpecs.Length; i++)
                                         {
-                                            string groupName = "Default";
-                                            bool rootLevelSpecification = false;
                                             string[] specsArr = allSpecs[i].Split(':');
                                             string specName = specsArr[0];
                                             if (specName.First().Equals('.'))
                                             {
-                                                rootLevelSpecification = true;
                                                 specName = specName.Substring(1);
                                             }
 
                                             if (specName.Contains("!"))
                                             {
                                                 string[] specGroup = specName.Split('!');
-                                                groupName = specGroup[0];
                                                 specName = specGroup[1];
                                             }
 
@@ -481,20 +461,16 @@ namespace SheetsCatalogImport.Services
                                         productRequest.Specs = new ProductV2Spec[allSpecs.Length];
                                         for (int i = 0; i < allSpecs.Length; i++)
                                         {
-                                            string groupName = "Default";
-                                            bool rootLevelSpecification = false;
                                             string[] specsArr = allSpecs[i].Split(':');
                                             string specName = specsArr[0];
                                             if (specName.First().Equals('.'))
                                             {
-                                                rootLevelSpecification = true;
                                                 specName = specName.Substring(1);
                                             }
 
                                             if (specName.Contains("!"))
                                             {
                                                 string[] specGroup = specName.Split('!');
-                                                groupName = specGroup[0];
                                                 specName = specGroup[1];
                                             }
 
@@ -559,7 +535,6 @@ namespace SheetsCatalogImport.Services
 
                                 try
                                 {
-                                    //_context.Vtex.Logger.Debug("ProductRequest", null, $"{JsonConvert.SerializeObject(productRequest)}");
                                     UpdateResponse productV2Response = null;
                                     ProductRequestV2 existingProduct = null;
                                     if (!string.IsNullOrEmpty(productRequest.Id))
@@ -583,7 +558,6 @@ namespace SheetsCatalogImport.Services
                                                 try
                                                 {
                                                     ProductResponseV2 productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(productV2Response.Message);
-                                                    previousProductId = productResponseV2.Id;
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -592,10 +566,9 @@ namespace SheetsCatalogImport.Services
                                             }
                                             else
                                             {
-                                                sb.AppendLine($"[{productV2Response.StatusCode}] {productV2Response.Message}");
                                                 if (productV2Response.StatusCode.Equals("Conflict") && doUpdate)
                                                 {
-                                                    // A product with external id "101" already exists.
+                                                    sb.AppendLine($"[{productV2Response.StatusCode}] {productV2Response.Message}");
                                                     if (productV2Response.Message.Contains("A product with external id "))
                                                     {
                                                         string[] splitResponse = productV2Response.Message.Split("\"");
@@ -620,13 +593,6 @@ namespace SheetsCatalogImport.Services
                                                         sb.AppendLine($"Updating Product Id '{productRequest.Id}'");
                                                         productV2Response = await this.UpdateProductV2(productRequest);
                                                     }
-
-                                                    // A sku with external id "7020801_7001587_0_U" already exists.
-                                                    //if (productV2Response.Message.Contains("A sku with external id "))
-                                                    //{
-                                                    //    string[] splitResponse = productV2Response.Message.Split("\"");
-                                                    //    string externalId = splitResponse[1];
-                                                    //}
                                                 }
                                             }
                                         }
@@ -3319,7 +3285,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}")
+                    RequestUri = new Uri($"https://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}")
                 };
 
                 string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
@@ -3673,7 +3639,7 @@ namespace SheetsCatalogImport.Services
                 {
                     if (update)
                     {
-                        existingProduct.Skus.Remove(existingProduct.Skus.Where(s => s.Id.Equals(skus.Id)).FirstOrDefault());
+                        existingProduct.Skus.Remove(existingProduct.Skus.FirstOrDefault(s => s.Id.Equals(skus.Id)));
                         existingProduct.Skus.Add(skus);
                     }
                     else
@@ -3688,270 +3654,6 @@ namespace SheetsCatalogImport.Services
             }
 
             return existingProduct;
-        }
-
-        private async Task<bool> NextLineIsSameProduct(Dictionary<string, int> headerIndexDictionary, string[][] values, int index)
-        {
-            bool isSame = false;
-
-            string[] dataValues = values[index];
-            string productid = null;
-            string category = null;
-            string brand = null;
-            string productName = null;
-            string productReferenceCode = null;
-            string productDescription = null;
-            string searchKeywords = null;
-            string metaTagDescription = null;
-            string imageUrl1 = null;
-            string imageUrl2 = null;
-            string imageUrl3 = null;
-            string imageUrl4 = null;
-            string imageUrl5 = null;
-            string productSpecs = null;
-            string productSpecGroup = null;
-            string productSpecField = null;
-            string productSpecValue = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValues.Count())
-                productid = dataValues[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValues.Count())
-                category = dataValues[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValues.Count())
-                brand = dataValues[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValues.Count())
-                productName = dataValues[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValues.Count())
-                productReferenceCode = dataValues[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValues.Count())
-                productDescription = dataValues[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValues.Count())
-                searchKeywords = dataValues[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValues.Count())
-                metaTagDescription = dataValues[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValues.Count())
-                imageUrl1 = dataValues[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValues.Count())
-                imageUrl2 = dataValues[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValues.Count())
-                imageUrl3 = dataValues[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValues.Count())
-                imageUrl4 = dataValues[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValues.Count())
-                imageUrl5 = dataValues[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValues.Count())
-                productSpecs = dataValues[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValues.Count())
-                productSpecGroup = dataValues[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValues.Count())
-                productSpecField = dataValues[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValues.Count())
-                productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
-
-            string[] dataValuesNext = values[index+1];
-            string productidNext = null;
-            string categoryNext = null;
-            string brandNext = null;
-            string productNameNext = null;
-            string productReferenceCodeNext = null;
-            string productDescriptionNext = null;
-            string searchKeywordsNext = null;
-            string metaTagDescriptionNext = null;
-            string imageUrl1Next = null;
-            string imageUrl2Next = null;
-            string imageUrl3Next = null;
-            string imageUrl4Next = null;
-            string imageUrl5Next = null;
-            string productSpecsNext = null;
-            string productSpecGroupNext = null;
-            string productSpecFieldNext = null;
-            string productSpecValueNext = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValuesNext.Count())
-                productidNext = dataValuesNext[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValuesNext.Count())
-                categoryNext = dataValuesNext[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValuesNext.Count())
-                brandNext = dataValuesNext[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValuesNext.Count())
-                productNameNext = dataValuesNext[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValuesNext.Count())
-                productReferenceCodeNext = dataValuesNext[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValuesNext.Count())
-                productDescriptionNext = dataValuesNext[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValuesNext.Count())
-                searchKeywordsNext = dataValuesNext[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValuesNext.Count())
-                metaTagDescriptionNext = dataValuesNext[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValuesNext.Count())
-                imageUrl1Next = dataValuesNext[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValuesNext.Count())
-                imageUrl2Next = dataValuesNext[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValuesNext.Count())
-                imageUrl3Next = dataValuesNext[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValuesNext.Count())
-                imageUrl4Next = dataValuesNext[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValuesNext.Count())
-                imageUrl5Next = dataValuesNext[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValuesNext.Count())
-                productSpecsNext = dataValuesNext[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValuesNext.Count())
-                productSpecGroupNext = dataValuesNext[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValuesNext.Count())
-                productSpecFieldNext = dataValuesNext[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValuesNext.Count())
-                productSpecValueNext = dataValuesNext[headerIndexDictionary["product spec value"]];
-
-            isSame =
-                productid.Equals(productidNext) &&
-                category.Equals(categoryNext) &&
-                brand.Equals(brandNext) &&
-                productName.Equals(productNameNext) &&
-                productReferenceCode.Equals(productReferenceCodeNext) &&
-                productDescription.Equals(productDescriptionNext) &&
-                searchKeywords.Equals(searchKeywordsNext) &&
-                metaTagDescription.Equals(metaTagDescriptionNext) &&
-                imageUrl1.Equals(imageUrl1Next) &&
-                imageUrl2.Equals(imageUrl2Next) &&
-                imageUrl3.Equals(imageUrl3Next) &&
-                imageUrl4.Equals(imageUrl4Next) &&
-                imageUrl5.Equals(imageUrl5Next) &&
-                productSpecs.Equals(productSpecsNext) &&
-                productSpecGroup.Equals(productSpecGroupNext) &&
-                productSpecField.Equals(productSpecFieldNext) &&
-                productSpecValue.Equals(productSpecValueNext);
-
-            return isSame;
-        }
-
-        private async Task<bool> PreviousLineIsSameProduct(Dictionary<string, int> headerIndexDictionary, string[][] values, int index)
-        {
-            bool isSame = false;
-
-            string[] dataValues = values[index];
-            string productid = null;
-            string category = null;
-            string brand = null;
-            string productName = null;
-            string productReferenceCode = null;
-            string productDescription = null;
-            string searchKeywords = null;
-            string metaTagDescription = null;
-            string imageUrl1 = null;
-            string imageUrl2 = null;
-            string imageUrl3 = null;
-            string imageUrl4 = null;
-            string imageUrl5 = null;
-            string productSpecs = null;
-            string productSpecGroup = null;
-            string productSpecField = null;
-            string productSpecValue = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValues.Count())
-                productid = dataValues[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValues.Count())
-                category = dataValues[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValues.Count())
-                brand = dataValues[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValues.Count())
-                productName = dataValues[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValues.Count())
-                productReferenceCode = dataValues[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValues.Count())
-                productDescription = dataValues[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValues.Count())
-                searchKeywords = dataValues[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValues.Count())
-                metaTagDescription = dataValues[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValues.Count())
-                imageUrl1 = dataValues[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValues.Count())
-                imageUrl2 = dataValues[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValues.Count())
-                imageUrl3 = dataValues[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValues.Count())
-                imageUrl4 = dataValues[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValues.Count())
-                imageUrl5 = dataValues[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValues.Count())
-                productSpecs = dataValues[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValues.Count())
-                productSpecGroup = dataValues[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValues.Count())
-                productSpecField = dataValues[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValues.Count())
-                productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
-
-            string[] dataValuesPrev = values[index - 1];
-            string productidPrev = null;
-            string categoryPrev = null;
-            string brandPrev = null;
-            string productNamePrev = null;
-            string productReferenceCodePrev = null;
-            string productDescriptionPrev = null;
-            string searchKeywordsPrev = null;
-            string metaTagDescriptionPrev = null;
-            string imageUrl1Prev = null;
-            string imageUrl2Prev = null;
-            string imageUrl3Prev = null;
-            string imageUrl4Prev = null;
-            string imageUrl5Prev = null;
-            string productSpecsPrev = null;
-            string productSpecGroupPrev = null;
-            string productSpecFieldPrev = null;
-            string productSpecValuePrev = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValuesPrev.Count())
-                productidPrev = dataValuesPrev[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValuesPrev.Count())
-                categoryPrev = dataValuesPrev[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValuesPrev.Count())
-                brandPrev = dataValuesPrev[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValuesPrev.Count())
-                productNamePrev = dataValuesPrev[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValuesPrev.Count())
-                productReferenceCodePrev = dataValuesPrev[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValuesPrev.Count())
-                productDescriptionPrev = dataValuesPrev[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValuesPrev.Count())
-                searchKeywordsPrev = dataValuesPrev[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValuesPrev.Count())
-                metaTagDescriptionPrev = dataValuesPrev[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValuesPrev.Count())
-                imageUrl1Prev = dataValuesPrev[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValuesPrev.Count())
-                imageUrl2Prev = dataValuesPrev[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValuesPrev.Count())
-                imageUrl3Prev = dataValuesPrev[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValuesPrev.Count())
-                imageUrl4Prev = dataValuesPrev[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValuesPrev.Count())
-                imageUrl5Prev = dataValuesPrev[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValuesPrev.Count())
-                productSpecsPrev = dataValuesPrev[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValuesPrev.Count())
-                productSpecGroupPrev = dataValuesPrev[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValuesPrev.Count())
-                productSpecFieldPrev = dataValuesPrev[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValuesPrev.Count())
-                productSpecValuePrev = dataValuesPrev[headerIndexDictionary["product spec value"]];
-
-            isSame =
-                productid.Equals(productidPrev) &&
-                category.Equals(categoryPrev) &&
-                brand.Equals(brandPrev) &&
-                productName.Equals(productNamePrev) &&
-                productReferenceCode.Equals(productReferenceCodePrev) &&
-                productDescription.Equals(productDescriptionPrev) &&
-                searchKeywords.Equals(searchKeywordsPrev) &&
-                metaTagDescription.Equals(metaTagDescriptionPrev) &&
-                imageUrl1.Equals(imageUrl1Prev) &&
-                imageUrl2.Equals(imageUrl2Prev) &&
-                imageUrl3.Equals(imageUrl3Prev) &&
-                imageUrl4.Equals(imageUrl4Prev) &&
-                imageUrl5.Equals(imageUrl5Prev) &&
-                productSpecs.Equals(productSpecsPrev) &&
-                productSpecGroup.Equals(productSpecGroupPrev) &&
-                productSpecField.Equals(productSpecFieldPrev) &&
-                productSpecValue.Equals(productSpecValuePrev);
-
-            return isSame;
         }
     }
 }
