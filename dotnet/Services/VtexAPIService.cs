@@ -553,41 +553,38 @@ namespace SheetsCatalogImport.Services
                                         productV2Response = await this.CreateProductV2(productRequest);
                                         if (productV2Response != null)
                                         {
-                                            if (!productV2Response.Success)
+                                            if (!productV2Response.Success && productV2Response.StatusCode.Equals("Conflict") && doUpdate)
                                             {
-                                                if (productV2Response.StatusCode.Equals("Conflict") && doUpdate)
+                                                sb.AppendLine($"[{productV2Response.StatusCode}] {productV2Response.Message}");
+                                                if (productV2Response.Message.Contains("A product with external id "))
                                                 {
-                                                    sb.AppendLine($"[{productV2Response.StatusCode}] {productV2Response.Message}");
-                                                    if (productV2Response.Message.Contains("A product with external id "))
-                                                    {
-                                                        string[] splitResponse = productV2Response.Message.Split("\"");
-                                                        string externalId = splitResponse[1];
-                                                        existingProduct = await GetProductByExternalIdV2(externalId);
-                                                    }
+                                                    string[] splitResponse = productV2Response.Message.Split("\"");
+                                                    string externalId = splitResponse[1];
+                                                    existingProduct = await GetProductByExternalIdV2(externalId);
+                                                }
 
-                                                    if (existingProduct != null && !string.IsNullOrEmpty(productRequest.Id))
-                                                    {
-                                                        existingProduct = await this.GetProductV2(productRequest.Id);
-                                                    }
+                                                if (existingProduct != null && !string.IsNullOrEmpty(productRequest.Id))
+                                                {
+                                                    existingProduct = await this.GetProductV2(productRequest.Id);
+                                                }
 
-                                                    if (existingProduct != null)
-                                                    {
-                                                        productRequest.Id = existingProduct.Id;
-                                                        sb.AppendLine($"Updating Existing Product Id '{productRequest.Id}'");
-                                                        productRequest = await this.MergeProductRequestV2(existingProduct, productRequest);
-                                                        productV2Response = await this.UpdateProductV2(productRequest);
-                                                    }
-                                                    else
-                                                    {
-                                                        sb.AppendLine($"Updating Product Id '{productRequest.Id}'");
-                                                        productV2Response = await this.UpdateProductV2(productRequest);
-                                                    }
+                                                if (existingProduct != null)
+                                                {
+                                                    productRequest.Id = existingProduct.Id;
+                                                    sb.AppendLine($"Updating Existing Product Id '{productRequest.Id}'");
+                                                    productRequest = await this.MergeProductRequestV2(existingProduct, productRequest);
+                                                    productV2Response = await this.UpdateProductV2(productRequest);
+                                                }
+                                                else
+                                                {
+                                                    sb.AppendLine($"Updating Product Id '{productRequest.Id}'");
+                                                    productV2Response = await this.UpdateProductV2(productRequest);
                                                 }
                                             }
                                         }
                                         else
                                         {
-                                            Console.WriteLine("CreateProductV2 NULL Response!");
+                                            _context.Vtex.Logger.Warn("CreateProductV2", null, "CreateProductV2 NULL Response!");
                                         }
                                     }
                                     else
@@ -937,34 +934,34 @@ namespace SheetsCatalogImport.Services
                                     {
                                         try
                                         {
-                                            string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                            for (int i = 0; i < allSpecs.Length; i++)
+                                            string[] allProdSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                            for (int i = 0; i < allProdSpecs.Length; i++)
                                             {
-                                                string groupName = "Default";
+                                                string prodGroupName = "Default";
                                                 bool rootLevelSpecification = false;
-                                                string[] specsArr = allSpecs[i].Split(':');
-                                                string specName = specsArr[0];
-                                                if(specName.First().Equals('.'))
+                                                string[] prodSpecsArr = allProdSpecs[i].Split(':');
+                                                string prodSpecName = prodSpecsArr[0];
+                                                if(prodSpecName.First().Equals('.'))
                                                 {
                                                     rootLevelSpecification = true;
-                                                    specName = specName.Substring(1);
+                                                    prodSpecName = prodSpecName.Substring(1);
                                                 }
 
-                                                if(specName.Contains("!"))
+                                                if(prodSpecName.Contains("!"))
                                                 {
-                                                    string[] specGroup = specName.Split('!');
-                                                    groupName = specGroup[0];
-                                                    specName = specGroup[1];
+                                                    string[] prodSpecGroup = prodSpecName.Split('!');
+                                                    prodGroupName = prodSpecGroup[0];
+                                                    prodSpecName = prodSpecGroup[1];
                                                 }
                                                 
-                                                string[] specValueArr = specsArr[1].Split(',');
+                                                string[] prodSpecValueArr = prodSpecsArr[1].Split(',');
 
                                                 SpecAttr prodSpec = new SpecAttr
                                                 {
-                                                    GroupName = groupName,
+                                                    GroupName = prodGroupName,
                                                     RootLevelSpecification = rootLevelSpecification,
-                                                    FieldName = specName,
-                                                    FieldValues = specValueArr
+                                                    FieldName = prodSpecName,
+                                                    FieldValues = prodSpecValueArr
                                                 };
 
                                                 UpdateResponse prodSpecResponse = await this.SetProdSpecs(productId.ToString(), prodSpec);
