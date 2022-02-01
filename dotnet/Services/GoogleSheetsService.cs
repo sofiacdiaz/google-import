@@ -87,7 +87,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"https://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.AUTH_PATH}/{SheetsCatalogImportConstants.APP_TYPE}")
+                    RequestUri = new Uri($"http://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.AUTH_PATH}/{SheetsCatalogImportConstants.APP_TYPE}")
                 };
 
                 request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
@@ -136,7 +136,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new Uri($"https://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.REVOKE_PATH}"),
+                    RequestUri = new Uri($"http://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.REVOKE_PATH}"),
                     Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_FORM)
                 };
 
@@ -179,7 +179,7 @@ namespace SheetsCatalogImport.Services
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new Uri($"https://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.REFRESH_PATH}/{SheetsCatalogImportConstants.APP_TYPE}/{HttpUtility.UrlEncode(refreshToken)}"),
+                    RequestUri = new Uri($"http://{SheetsCatalogImportConstants.AUTH_SITE_BASE}/{SheetsCatalogImportConstants.AUTH_APP_PATH}/{SheetsCatalogImportConstants.REFRESH_PATH}/{SheetsCatalogImportConstants.APP_TYPE}/{HttpUtility.UrlEncode(refreshToken)}"),
                     Content = new StringContent(string.Empty, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_FORM)
                 };
 
@@ -613,7 +613,7 @@ namespace SheetsCatalogImport.Services
 
                     var jsonSerializedMetadata = JsonConvert.SerializeObject(metadata);
 
-                    // POST https://www.googleapis.com/drive/v3/files/fileId/permissions
+                    // POST http://www.googleapis.com/drive/v3/files/fileId/permissions
                     var request = new HttpRequestMessage
                     {
                         Method = HttpMethod.Post,
@@ -1809,7 +1809,7 @@ namespace SheetsCatalogImport.Services
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
-                RequestUri = new Uri($"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/share-token"),
+                RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/share-token"),
                 Content = new StringContent(jsonSerializedMetadata, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_FORM)
             };
 

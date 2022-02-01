@@ -1773,8 +1773,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1788,8 +1788,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1836,8 +1836,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1851,8 +1851,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1866,8 +1866,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1975,8 +1975,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1989,8 +1989,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2177,8 +2177,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2192,8 +2192,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2207,8 +2207,8 @@ namespace SheetsCatalogImport.Services
             UpdateResponse updateResponse = new UpdateResponse
             {
                 Success = response.IsSuccess,
-                Message = response.StatusCode,
-                StatusCode = response.ResponseText
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;

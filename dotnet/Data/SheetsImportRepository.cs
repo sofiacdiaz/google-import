@@ -42,7 +42,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.TOKEN}")
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.TOKEN}")
             };
 
             string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
@@ -75,7 +75,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Put,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.TOKEN}"),
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.TOKEN}"),
                 Content = new StringContent(jsonSerializedToken, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
             };
 
@@ -98,7 +98,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{accountName}")
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{accountName}")
             };
 
             string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
@@ -130,7 +130,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Put,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{accountName}"),
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._environmentVariableProvider.Workspace}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{accountName}"),
                 Content = new StringContent(jsonSerializedToken, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
             };
 
@@ -159,7 +159,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Put,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}"),
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}"),
                 Content = new StringContent(jsonSerializedLock, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
             };
 
@@ -181,7 +181,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}")
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}")
             };
 
             string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
@@ -218,7 +218,7 @@
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Put,
-                RequestUri = new Uri($"https://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}"),
+                RequestUri = new Uri($"http://infra.io.vtex.com/vbase/v2/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/buckets/{this._applicationName}/{SheetsCatalogImportConstants.BUCKET}/files/{SheetsCatalogImportConstants.LOCK}"),
                 Content = new StringContent(jsonSerializedLock, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
             };
 
@@ -243,7 +243,7 @@
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"https://apps.{this._environmentVariableProvider.Region}.vtex.io/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/apps/{SheetsCatalogImportConstants.APP_SETTINGS}/settings"),
+                    RequestUri = new Uri($"http://apps.{this._environmentVariableProvider.Region}.vtex.io/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_WORKSPACE_HEADER_NAME]}/apps/{SheetsCatalogImportConstants.APP_SETTINGS}/settings"),
                 };
 
                 string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];

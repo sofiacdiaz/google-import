@@ -5,18 +5,11 @@
     using SheetsCatalogImport.Services;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.TagHelpers;
     using Newtonsoft.Json;
     using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Net.Http;
-    using System.Runtime.CompilerServices;
-    using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
-    using System.Web;
     using Vtex.Api.Context;
 
     public class RoutesController : Controller
