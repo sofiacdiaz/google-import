@@ -1462,48 +1462,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/product
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("CreateProduct", null, $"{jsonSerializedData} [{statusCode}] {responseContent}");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProduct", null, $"Error creating product {createProductRequest.Title}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1512,47 +1477,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProduct(string productId, ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProduct", null, $"Error updating product {updateProductRequest.Title}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1561,47 +1492,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createSkuRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateSku", null, $"Error creating sku {createSkuRequest.Name}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1610,47 +1507,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateSku(string skuId, SkuRequest updateSkuRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateSkuRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateSku", null, $"Error updating sku {updateSkuRequest.Name}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1659,47 +1522,21 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/category/tree/categoryLevels
-
             GetCategoryTreeResponse[] getCategoryTreeResponse = null;
-
-            try
+            if (string.IsNullOrEmpty(accountName))
             {
-                if (string.IsNullOrEmpty(accountName))
-                {
-                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                }
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}")
-
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetCategoryTree", null, $"Could not get category tree '{categoryLevels}' [{response.StatusCode}]");
-                }
+                accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
-            catch (Exception ex)
+
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                _context.Vtex.Logger.Error("GetCategoryTree", null, $"Error getting category tree '{categoryLevels}'", ex);
+                getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(response.ResponseText);
+            }
+            else
+            {
+                _context.Vtex.Logger.Warn("GetCategoryTree", null, $"Could not get category tree '{categoryLevels}' [{response.StatusCode}]");
             }
 
             return getCategoryTreeResponse;
@@ -1708,41 +1545,12 @@ namespace SheetsCatalogImport.Services
         public async Task<CategoryResponse> CreateCategory(CategoryRequest createCategoryRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/category
-
-            string responseContent = string.Empty;
             CategoryResponse createCategoryResponse = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryRequest);
+            if (response.IsSuccess)
             {
-                string jsonSerializedData = JsonConvert.SerializeObject(createCategoryRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    createCategoryResponse = JsonConvert.DeserializeObject<CategoryResponse>(responseContent);
-                }
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateCategory", null, $"Error creating category {createCategoryRequest.Title}", ex);
+                createCategoryResponse = JsonConvert.DeserializeObject<CategoryResponse>(response.ResponseText);
             }
 
             return createCategoryResponse;
@@ -1751,47 +1559,21 @@ namespace SheetsCatalogImport.Services
         public async Task<GetBrandListResponse[]> GetBrandList(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/brand/list
-
             GetBrandListResponse[] getBrandListResponse = null;
-
-            try
+            if (string.IsNullOrEmpty(accountName))
             {
-                if(string.IsNullOrEmpty(accountName))
-                {
-                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                }
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetBrandList [{response.StatusCode}] {accountName}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetBrandList", null, $"Could not get brand list [{response.StatusCode}]");
-                }
+                accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
-            catch (Exception ex)
+
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                _context.Vtex.Logger.Error("GetBrandList", null, $"Error getting brand list", ex);
+                getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListResponse[]>(response.ResponseText);
+            }
+            else
+            {
+                _context.Vtex.Logger.Warn("GetBrandList", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
             }
 
             return getBrandListResponse;
@@ -1801,42 +1583,16 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
             // portal.vtexcommercestable.com.br/api/whatever?an={accountName}
-
             GetBrandListV2Response getBrandListResponse = null;
-
-            try
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetBrandListV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
-                }
+                getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetBrandListV2", null, $"Error getting brand list '{accountName}'", ex);
+                _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
             }
 
             return getBrandListResponse;
@@ -1851,43 +1607,16 @@ namespace SheetsCatalogImport.Services
                 IsActive = true
             };
 
-            try
+            string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createBrandV2Request);
+            if (response.IsSuccess)
             {
-                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                string jsonSerializedData = JsonConvert.SerializeObject(createBrandV2Request);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"CreateBrandV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    createBrandV2Response = JsonConvert.DeserializeObject<CreateBrandV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("CreateBrandV2", null, $"Could not create brand '{brandName}' [{response.StatusCode}]");
-                }
+                createBrandV2Response = JsonConvert.DeserializeObject<CreateBrandV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("CreateBrandV2", null, $"Error creating brand '{brandName}'", ex);
+                _context.Vtex.Logger.Warn("CreateBrandV2", null, $"Could not create brand '{brandName}' [{response.StatusCode}]");
             }
 
             return createBrandV2Response;
@@ -1896,43 +1625,18 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryListV2Response> GetCategoryListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
-
             GetCategoryListV2Response getCategoryList = null;
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetCategoryListV2 {accountName}: {response.StatusCode}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getCategoryList = JsonConvert.DeserializeObject<GetCategoryListV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list '{accountName}' [{response.StatusCode}]");
-                }
+                getCategoryList = JsonConvert.DeserializeObject<GetCategoryListV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"GetCategoryListV2 Error getting category list '{accountName}'");
-                _context.Vtex.Logger.Error("GetCategoryListV2", null, $"Error getting category list '{accountName}'", ex);
+                _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list '{accountName}' [{response.StatusCode}]");
             }
 
             return getCategoryList;
@@ -1946,43 +1650,17 @@ namespace SheetsCatalogImport.Services
                 Name = categoryName
             };
 
-            try
+            string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryV2Request);
+
+            if (response.IsSuccess)
             {
-                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                string jsonSerializedData = JsonConvert.SerializeObject(createCategoryV2Request);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"CreateCategoryV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("CreateCategoryV2", null, $"Could not create brand '{categoryName}' [{response.StatusCode}]");
-                }
+                createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("CreateCategoryV2", null, $"Error creating brand '{categoryName}'", ex);
+                _context.Vtex.Logger.Warn("CreateCategoryV2", null, $"Could not create brand '{categoryName}' [{response.StatusCode}]");
             }
 
             return createCategoryV2Response;
@@ -1991,41 +1669,17 @@ namespace SheetsCatalogImport.Services
         public async Task<GetProductByIdResponse> GetProductById(string productId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
-
             GetProductByIdResponse getProductByIdResponse = null;
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getProductByIdResponse = JsonConvert.DeserializeObject<GetProductByIdResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductById", null, $"Could not get product for id '{productId}' [{response.StatusCode}]");
-                }
+                getProductByIdResponse = JsonConvert.DeserializeObject<GetProductByIdResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductById", null, $"Error getting product for id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductById", null, $"Could not get product for id '{productId}' [{response.StatusCode}]");
             }
 
             return getProductByIdResponse;
@@ -2034,41 +1688,16 @@ namespace SheetsCatalogImport.Services
         public async Task<long[]> ListSkuIds(int page, int pagesize)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids
-
             long[] listSkuIdsResponse = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    listSkuIdsResponse = JsonConvert.DeserializeObject<long[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ListSkuIds", null, $"Could not get sku ids {page}/{pagesize} [{response.StatusCode}]");
-                }
+                listSkuIdsResponse = JsonConvert.DeserializeObject<long[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ListSkuIds", null, $"Error getting sku ids {page}/{pagesize}", ex);
+                _context.Vtex.Logger.Warn("ListSkuIds", null, $"Could not get sku ids {page}/{pagesize} [{response.StatusCode}]");
             }
 
             return listSkuIdsResponse;
@@ -2077,7 +1706,6 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateSkuFile(string skuId, string imageName, string imageText, bool isMain, string imageUrl)
         {
             //POST https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/file
-
             bool success = false;
             string responseContent = string.Empty;
             string statusCode = string.Empty;
@@ -2099,33 +1727,16 @@ namespace SheetsCatalogImport.Services
                         Url = imageUrl
                     };
 
-                    string jsonSerializedData = JsonConvert.SerializeObject(imageUpdate);
-
-                    var request = new HttpRequestMessage
-                    {
-                        Method = HttpMethod.Post,
-                        RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file"),
-                        Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                    };
-
-                    string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                    if (authToken != null)
-                    {
-                        request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                        request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                        request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                    }
-
-                    var client = _clientFactory.CreateClient();
-                    var response = await client.SendAsync(request);
-                    responseContent = await response.Content.ReadAsStringAsync();
-                    success = response.IsSuccessStatusCode;
+                    string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+                    ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, imageUpdate);
+                    responseContent = response.ResponseText;
+                    success = response.IsSuccess;
                     if (!success)
                     {
-                        _context.Vtex.Logger.Info("UpdateSkuImage", null, $"Response: {responseContent}  [{response.StatusCode}] for request '{jsonSerializedData}' to {request.RequestUri}");
+                        _context.Vtex.Logger.Info("UpdateSkuImage", null, $"Response: {responseContent}  [{response.StatusCode}] for request '{JsonConvert.SerializeObject(imageUpdate)}' to {url}");
                     }
 
-                    statusCode = response.StatusCode.ToString();
+                    statusCode = response.StatusCode;
                     if (string.IsNullOrEmpty(responseContent))
                     {
                         responseContent = $"Updated:{success} {response.StatusCode}";
@@ -2157,44 +1768,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateEANGTIN(string skuId, string ean)
         {
             // POST https://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean/ean
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateEANGTIN", null, $"Error creating EAN/GTIN {ean} for Sku {skuId}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2203,47 +1783,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreatePrice(string skuId, CreatePrice createPrice)
         {
             // PUT https://api.vtex.com/accountName/pricing/prices/skuId
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createPrice);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreatePrice", null, $"Error creating Price for Sku {skuId}", ex);
-            }
-
+            string url = $"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, createPrice);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2252,41 +1798,18 @@ namespace SheetsCatalogImport.Services
         public async Task<GetWarehousesResponse[]> GetWarehouses()
         {
             // GET https://logistics.environment.com.br/api/logistics/pvt/configuration/warehouses?an=accountName
-
             GetWarehousesResponse[] getWarehousesResponse = null;
+            string url = $"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetWarehouses", null, $"Could not get warehouses' [{response.StatusCode}]");
-                }
+                getWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetWarehouses", null, $"Error getting warehouses", ex);
+                _context.Vtex.Logger.Warn("GetWarehouses", null, $"Could not get warehouses' [{response.StatusCode}]");
             }
 
             return getWarehousesResponse;
@@ -2295,27 +1818,11 @@ namespace SheetsCatalogImport.Services
         public async Task<GetWarehousesResponse[]> ListAllWarehouses()
         {
             GetWarehousesResponse[] listAllWarehousesResponse = null;
-            var request = new HttpRequestMessage
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses")
-            };
-
-            request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-            if (authToken != null)
-            {
-                request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-            }
-
-            var client = _clientFactory.CreateClient();
-            var response = await client.SendAsync(request);
-            string responseContent = await response.Content.ReadAsStringAsync();
-            if (response.IsSuccessStatusCode)
-            {
-                listAllWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(responseContent);
+                listAllWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(response.ResponseText);
             }
 
             return listAllWarehousesResponse;
@@ -2324,47 +1831,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> SetInventory(string skuId, string warehouseId, InventoryRequest inventoryRequest)
         {
             // PUT https://logistics.vtexcommercestable.com.br/api/logistics/pvt/inventory/skus/skuId/warehouses/warehouseId?an=accountName
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(inventoryRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetInventory", null, $"Error setting inventory for sku {skuId} in warehouse {warehouseId}", ex);
-            }
-
+            string url = $"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, inventoryRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2373,47 +1846,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> SetProdSpecs(string productId, SpecAttr prodSpec)
         {
             // PUT http://accountName.environment.com.br/api/catalog/pvt/product/productId/specificationvalue
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(prodSpec);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetProdSpecs", null, $"Error setting product specs for prodId {productId}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, prodSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2422,46 +1861,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> SetSkuSpec(string skuId, SpecAttr skuSpec)
         {
             // PUT http://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/SkuId/specificationvalue
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(skuSpec);
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetSkuSpec", null, $"Error setting product specs for sku {skuId}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, skuSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2470,41 +1876,17 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductAndSkuIdsResponse> GetProductAndSkuIds(long categoryId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds
-
             ProductAndSkuIdsResponse productAndSkuIdsResponse = new ProductAndSkuIdsResponse();
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productAndSkuIdsResponse = JsonConvert.DeserializeObject<ProductAndSkuIdsResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductAndSkuIds", null, $"Could not get products and skus for category '{categoryId}' [{response.StatusCode}]");
-                }
+                productAndSkuIdsResponse = JsonConvert.DeserializeObject<ProductAndSkuIdsResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductAndSkuIds", null, $"Error getting products and skus for category '{categoryId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductAndSkuIds", null, $"Could not get products and skus for category '{categoryId}' [{response.StatusCode}]");
             }
 
             return productAndSkuIdsResponse;
@@ -2513,41 +1895,17 @@ namespace SheetsCatalogImport.Services
         public async Task<SkuAndContextResponse> GetSkuAndContext(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/skuId
-
             SkuAndContextResponse skuAndContextResponse = new SkuAndContextResponse();
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    skuAndContextResponse = JsonConvert.DeserializeObject<SkuAndContextResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuAndContext", null, $"Could not get sku '{skuId}' [{response.StatusCode}]");
-                }
+                skuAndContextResponse = JsonConvert.DeserializeObject<SkuAndContextResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuAndContext", null, $"Error getting sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuAndContext", null, $"Could not get sku '{skuId}' [{response.StatusCode}]");
             }
 
             return skuAndContextResponse;
@@ -2556,41 +1914,17 @@ namespace SheetsCatalogImport.Services
         public async Task<string[]> GetEansBySkuId(long skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean
-
             string[] eans = null;
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    eans = JsonConvert.DeserializeObject<string[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetEanBySkuId", null, $"Could not get EAN for sku '{skuId}' [{response.StatusCode}]");
-                }
+                eans = JsonConvert.DeserializeObject<string[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetEanBySkuId", null, $"Error getting EAN for sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetEanBySkuId", null, $"Could not get EAN for sku '{skuId}' [{response.StatusCode}]");
             }
 
             return eans;
@@ -2599,41 +1933,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductSearchResponse[]> ProductSearch(string search)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/products/search/search
-
             ProductSearchResponse[] productSearchResponse = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSearchResponse = JsonConvert.DeserializeObject<ProductSearchResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ProductSearch", null, $"Could not search '{search}' [{response.StatusCode}]");
-                }
+                productSearchResponse = JsonConvert.DeserializeObject<ProductSearchResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ProductSearch", null, $"Error searching '{search}'", ex);
+                _context.Vtex.Logger.Warn("ProductSearch", null, $"Could not search '{search}' [{response.StatusCode}]");
             }
 
             return productSearchResponse;
@@ -2642,41 +1951,16 @@ namespace SheetsCatalogImport.Services
         public async Task<List<ProductSkusResponse>> GetSkusFromProductId(string productId)
         {
             // GET https://{{accountName}}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{{productId}}
-
             List<ProductSkusResponse> productSkusResponses = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSkusResponses = JsonConvert.DeserializeObject<List<ProductSkusResponse>>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkusFromProductId", null, $"Could not get skus for product id '{productId}'  [{response.StatusCode}]");
-                }
+                productSkusResponses = JsonConvert.DeserializeObject<List<ProductSkusResponse>>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkusFromProductId", null, $"Error getting skus for product id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkusFromProductId", null, $"Could not get skus for product id '{productId}'  [{response.StatusCode}]");
             }
 
             return productSkusResponses;
@@ -2685,45 +1969,14 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> ExtraInfo(ExtraInfo extraInfo)
         {
             // PUT https://accountName.vtexcommercestable.com.br/api/catalogv2/products/{productId}/extra-info
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
             string productId = extraInfo.ProductId;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("ExtraInfo", null, $"Error setting ExtraInfo for Product Id '{productId}'", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, extraInfo);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2731,43 +1984,13 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> CreateProductToTradePolicy(string productId, string tradepolicyId)
         {
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProductToTradePolicy", null, $"Error creating Trade Policy {tradepolicyId} for Product Id '{productId}'", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -2815,41 +2038,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ListFilesResponse> ListImageFiles()
         {
             // GET https://{{accountName}}.myvtex.com/google-drive-import/list-images
-
             ListFilesResponse listFilesResponse = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    listFilesResponse = JsonConvert.DeserializeObject<ListFilesResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ListImageFiles", null, $"Could not get image file list  [{response.StatusCode}]");
-                }
+                listFilesResponse = JsonConvert.DeserializeObject<ListFilesResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ListImageFiles", null, $"Error getting image file list", ex);
+                _context.Vtex.Logger.Warn("ListImageFiles", null, $"Could not get image file list  [{response.StatusCode}]");
             }
 
             return listFilesResponse;
@@ -2901,41 +2099,17 @@ namespace SheetsCatalogImport.Services
         public async Task<GetSkuImagesResponse[]> GetSkuImages(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/file
-
             GetSkuImagesResponse[] getSkuResponse = null;
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getSkuResponse = JsonConvert.DeserializeObject<GetSkuImagesResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuImages", null, $"Did not get images for skuid '{skuId}'");
-                }
+                getSkuResponse = JsonConvert.DeserializeObject<GetSkuImagesResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuImages", null, $"Error getting images for skuid '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuImages", null, $"Did not get images for skuid '{skuId}'");
             }
 
             return getSkuResponse;
@@ -2944,41 +2118,16 @@ namespace SheetsCatalogImport.Services
         public async Task<GetPriceResponse> GetPrice(string skuId)
         {
             // GET https://api.vtex.com/{accountName}/pricing/prices/itemId
-
             GetPriceResponse getPriceResponse = null;
-
-            try
+            string url = $"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getPriceResponse = JsonConvert.DeserializeObject<GetPriceResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetPrice", null, $"Could not get prices for sku '{skuId}' [{response.StatusCode}]");
-                }
+                getPriceResponse = JsonConvert.DeserializeObject<GetPriceResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetPrice", null, $"Error getting prices for sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetPrice", null, $"Could not get prices for sku '{skuId}' [{response.StatusCode}]");
             }
 
             return getPriceResponse;
@@ -2987,41 +2136,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductSpecification[]> GetProductSpecifications(string productId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/productId/specification
-
             ProductSpecification[] productSpecifications = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSpecifications = JsonConvert.DeserializeObject<ProductSpecification[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductSpecifications", null, $"Could not get product specifications for product id '{productId}' [{response.StatusCode}]");
-                }
+                productSpecifications = JsonConvert.DeserializeObject<ProductSpecification[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductSpecifications", null, $"Error getting product specifications for product id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductSpecifications", null, $"Could not get product specifications for product id '{productId}' [{response.StatusCode}]");
             }
 
             return productSpecifications;
@@ -3030,41 +2154,16 @@ namespace SheetsCatalogImport.Services
         public async Task<SkuSpecification[]> GetSkuSpecifications(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/specification
-
             SkuSpecification[] productSpecifications = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSpecifications = JsonConvert.DeserializeObject<SkuSpecification[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuSpecifications", null, $"Could not get sku specifications for sku id '{skuId}' [{response.StatusCode}]");
-                }
+                productSpecifications = JsonConvert.DeserializeObject<SkuSpecification[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuSpecifications", null, $"Error getting sku specifications for sku id '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuSpecifications", null, $"Could not get sku specifications for sku id '{skuId}' [{response.StatusCode}]");
             }
 
             return productSpecifications;
@@ -3073,49 +2172,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProductV2(ProductRequestV2 createProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    //RequestUri = new Uri($"http://{SheetsCatalogImportConstants.ENV_CATALOG}/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}"),
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("CreateProductV2", null, $"Request: '{jsonSerializedData}' \nResponse: [{statusCode}] '{responseContent}'");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProductV2", null, $"Error creating product {createProductRequest.Name}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -3124,48 +2187,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequestV2 updateProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("UpdateProductV2", null, $"Request: '{jsonSerializedData}' \nResponse: [{statusCode}] '{responseContent}'");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProductV2", null, $"Error updating product {updateProductRequest.Name}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -3174,47 +2202,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalogv2/products
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProduct", null, $"Error updating product {updateProductRequest.Title}", ex);
-            }
-
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.StatusCode,
+                StatusCode = response.ResponseText
             };
 
             return updateResponse;
@@ -3224,38 +2218,15 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/products/{productId}
             ProductResponseV2 productResponseV2 = null;
-
-            try
+            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}")
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductV2", null, $"Could not get product {productId}.\n[{response.StatusCode}] {responseContent}");
-                }
+                productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductV2", null, $"Error getting product {productId}", ex);
+                _context.Vtex.Logger.Warn("GetProductV2", null, $"Could not get product {productId}.\n[{response.StatusCode}] {response.ResponseText}");
             }
 
             return productResponseV2;
@@ -3265,38 +2236,15 @@ namespace SheetsCatalogImport.Services
         {
             // GET http://portal.vtexcommercestable.com.br/api/catalogv2/products?an=vyskseller2603&externalid=101
             ProductResponseV2 productResponseV2 = null;
-
-            try
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"https://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}")
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductByExternalIdV2", null, $"Could not get product {externalId}.\n[{response.StatusCode}] {responseContent}");
-                }
+                productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductByExternalIdV2", null, $"Error getting product {externalId}", ex);
+                _context.Vtex.Logger.Warn("GetProductByExternalIdV2", null, $"Could not get product {externalId}.\n[{response.StatusCode}] {response.ResponseText}");
             }
 
             return productResponseV2;
@@ -3640,6 +2588,70 @@ namespace SheetsCatalogImport.Services
             }
 
             return existingProduct;
+        }
+
+        private async Task<ResponseWrapper> SendRequest(HttpMethod httpMethod, string url, object requestObject = null)
+        {
+            ResponseWrapper responseWrapper = null;
+            string jsonSerializedRequest = string.Empty;
+
+            var request = new HttpRequestMessage
+            {
+                Method = httpMethod,
+                RequestUri = new Uri(url)
+            };
+
+            if (requestObject != null)
+            {
+                try
+                {
+                    jsonSerializedRequest = JsonConvert.SerializeObject(requestObject);
+                    request.Content = new StringContent(jsonSerializedRequest, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON);
+                }
+                catch (Exception ex)
+                {
+                    _context.Vtex.Logger.Error("SendRequest", null, $"Error Serializing Request Object", ex);
+                }
+            }
+
+            request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+            }
+
+            var client = _clientFactory.CreateClient();
+
+            try
+            {
+                HttpResponseMessage responseMessage = await client.SendAsync(request);
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                responseWrapper = new ResponseWrapper
+                {
+                    IsSuccess = responseMessage.IsSuccessStatusCode,
+                    ResponseText = responseContent,
+                    StatusCode = responseMessage.StatusCode.ToString()
+                };
+
+                if (!responseWrapper.IsSuccess)
+                {
+                    _context.Vtex.Logger.Warn("SendRequest", null, $"Problem Sending Request. Response: '{responseWrapper.ResponseText}' {jsonSerializedRequest}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("SendRequest", null, $"Error Sending Request to {request.RequestUri} {jsonSerializedRequest}", ex);
+                responseWrapper = new ResponseWrapper
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+            }
+
+            return responseWrapper;
         }
     }
 }
