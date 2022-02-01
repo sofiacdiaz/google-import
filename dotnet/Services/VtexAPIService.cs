@@ -1462,7 +1462,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/product
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1477,7 +1477,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProduct(string productId, ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1492,7 +1492,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1507,7 +1507,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateSku(string skuId, SkuRequest updateSkuRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1528,7 +1528,7 @@ namespace SheetsCatalogImport.Services
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
 
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1546,7 +1546,7 @@ namespace SheetsCatalogImport.Services
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/category
             CategoryResponse createCategoryResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryRequest);
             if (response.IsSuccess)
             {
@@ -1565,7 +1565,7 @@ namespace SheetsCatalogImport.Services
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
 
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1584,7 +1584,7 @@ namespace SheetsCatalogImport.Services
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
             // portal.vtexcommercestable.com.br/api/whatever?an={accountName}
             GetBrandListV2Response getBrandListResponse = null;
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1608,7 +1608,7 @@ namespace SheetsCatalogImport.Services
             };
 
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createBrandV2Request);
             if (response.IsSuccess)
             {
@@ -1626,7 +1626,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
             GetCategoryListV2Response getCategoryList = null;
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
 
@@ -1651,7 +1651,7 @@ namespace SheetsCatalogImport.Services
             };
 
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}";
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryV2Request);
 
             if (response.IsSuccess)
@@ -1670,7 +1670,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
             GetProductByIdResponse getProductByIdResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
             if (response.IsSuccess)
@@ -1689,7 +1689,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids
             long[] listSkuIdsResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1727,7 +1727,7 @@ namespace SheetsCatalogImport.Services
                         Url = imageUrl
                     };
 
-                    string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+                    string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
                     ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, imageUpdate);
                     responseContent = response.ResponseText;
                     success = response.IsSuccess;
@@ -1768,7 +1768,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateEANGTIN(string skuId, string ean)
         {
             // POST https://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean/ean
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1783,7 +1783,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreatePrice(string skuId, CreatePrice createPrice)
         {
             // PUT https://api.vtex.com/accountName/pricing/prices/skuId
-            string url = $"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            string url = $"https://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, createPrice);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1799,7 +1799,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://logistics.environment.com.br/api/logistics/pvt/configuration/warehouses?an=accountName
             GetWarehousesResponse[] getWarehousesResponse = null;
-            string url = $"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            string url = $"https://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
 
@@ -1818,7 +1818,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetWarehousesResponse[]> ListAllWarehouses()
         {
             GetWarehousesResponse[] listAllWarehousesResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1831,7 +1831,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> SetInventory(string skuId, string warehouseId, InventoryRequest inventoryRequest)
         {
             // PUT https://logistics.vtexcommercestable.com.br/api/logistics/pvt/inventory/skus/skuId/warehouses/warehouseId?an=accountName
-            string url = $"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            string url = $"https://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, inventoryRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1845,8 +1845,8 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> SetProdSpecs(string productId, SpecAttr prodSpec)
         {
-            // PUT http://accountName.environment.com.br/api/catalog/pvt/product/productId/specificationvalue
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue";
+            // PUT https://accountName.environment.com.br/api/catalog/pvt/product/productId/specificationvalue
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, prodSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1860,8 +1860,8 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> SetSkuSpec(string skuId, SpecAttr skuSpec)
         {
-            // PUT http://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/SkuId/specificationvalue
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue";
+            // PUT https://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/SkuId/specificationvalue
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, skuSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1877,7 +1877,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds
             ProductAndSkuIdsResponse productAndSkuIdsResponse = new ProductAndSkuIdsResponse();
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
             if (response.IsSuccess)
@@ -1896,7 +1896,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/skuId
             SkuAndContextResponse skuAndContextResponse = new SkuAndContextResponse();
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
             if (response.IsSuccess)
@@ -1915,7 +1915,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean
             string[] eans = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
             if (response.IsSuccess)
@@ -1934,7 +1934,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/products/search/search
             ProductSearchResponse[] productSearchResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1952,7 +1952,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{{accountName}}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{{productId}}
             List<ProductSkusResponse> productSkusResponses = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -1970,7 +1970,7 @@ namespace SheetsCatalogImport.Services
         {
             // PUT https://accountName.vtexcommercestable.com.br/api/catalogv2/products/{productId}/extra-info
             string productId = extraInfo.ProductId;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, extraInfo);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -1984,7 +1984,7 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> CreateProductToTradePolicy(string productId, string tradepolicyId)
         {
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -2039,7 +2039,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{{accountName}}.myvtex.com/google-drive-import/list-images
             ListFilesResponse listFilesResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -2100,7 +2100,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/file
             GetSkuImagesResponse[] getSkuResponse = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
             if (response.IsSuccess)
@@ -2119,7 +2119,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://api.vtex.com/{accountName}/pricing/prices/itemId
             GetPriceResponse getPriceResponse = null;
-            string url = $"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            string url = $"https://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -2137,7 +2137,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/productId/specification
             ProductSpecification[] productSpecifications = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -2155,7 +2155,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/specification
             SkuSpecification[] productSpecifications = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -2172,7 +2172,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProductV2(ProductRequestV2 createProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -2187,7 +2187,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequestV2 updateProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -2202,7 +2202,7 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalogv2/products
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
@@ -2218,7 +2218,7 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/products/{productId}
             ProductResponseV2 productResponseV2 = null;
-            string url = $"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}";
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
@@ -2234,7 +2234,7 @@ namespace SheetsCatalogImport.Services
 
         public async Task<ProductResponseV2> GetProductByExternalIdV2(string externalId)
         {
-            // GET http://portal.vtexcommercestable.com.br/api/catalogv2/products?an=vyskseller2603&externalid=101
+            // GET https://portal.vtexcommercestable.com.br/api/catalogv2/products?an=vyskseller2603&externalid=101
             ProductResponseV2 productResponseV2 = null;
             string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
