@@ -498,27 +498,62 @@ namespace SheetsCatalogImport.Services
                                     List<ProductV2Image> imagesList = new List<ProductV2Image>();
                                     if(!string.IsNullOrEmpty(imageUrl1))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl1, Alt = "Main", Id = "Main" });
+                                        if (imageUrl1.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl1, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl1, Alt = "Main", Id = "Main" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 1 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl2))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl2, Alt = "Alt 1", Id = "Alt 1" });
+                                        if (imageUrl2.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl2, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl2, Alt = "Alt 1", Id = "Alt 1" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 2 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl3))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl3, Alt = "Alt 2", Id = "Alt 2" });
+                                        if (imageUrl3.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl3, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl3, Alt = "Alt 2", Id = "Alt 2" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 3 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl4))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl4, Alt = "Alt 3", Id = "Alt 3" });
+                                        if (imageUrl4.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl4, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl4, Alt = "Alt 3", Id = "Alt 3" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 4 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl5))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl5, Alt = "Alt 4", Id = "Alt 4" });
+                                        if (imageUrl5.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl5, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl5, Alt = "Alt 4", Id = "Alt 4" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 5 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(imagesList.Count > 0)
