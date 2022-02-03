@@ -20,6 +20,10 @@ This app allows VTEX Catalog data to be imported from a spreadsheet on a user's 
 
 3. Follow the instructions provided on the admin page to grant access to your Google Drive.
 
+If using Catalog V2 select toggle
+Optionally enter the account name to use Categories & Brands from another account.
+![image](https://user-images.githubusercontent.com/47258865/152369322-3a6c2d83-1380-4858-8544-5a0bbc5c10ab.png)
+
 ## Notes
 
 A Google Drive account may only be used on one site at a time.
