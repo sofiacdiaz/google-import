@@ -6,13 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- (CATIMPORT-17) Updated Readme
+
 ### Fixed
 
 - Catalog V2 bugfixes
+- (CATIMPORT-22) Fixed bug with updating existing skus when id is defined.
 
 ### Added
 
 - Quality engineering actions
+- (CATIMPORT-23) Validate Image Urls
 
 ## [0.3.1] - 2022-01-05
 
