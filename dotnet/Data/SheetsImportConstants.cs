@@ -31,7 +31,6 @@ namespace SheetsCatalogImport.Data
         public const string CONTENT_TYPE = "Content-Type";
         public const string HTTP_FORWARDED_HEADER = "HTTP_X_FORWARDED_FOR";
 
-        //public const string BUCKET = "google-sheet-catalog";
         public const string BUCKET = "google-drive";
         public const string CREDENTIALS = "google-credentials";
         public const string TOKEN = "google-token";
@@ -75,7 +74,7 @@ namespace SheetsCatalogImport.Data
 
         public const string ENV_CATALOG = "sandboxusdevus.vtexcommercestable.com.br";
 
-        public class FolderNames
+        public static class FolderNames
         {
             // Folder Structure:
             // Google Drive root
@@ -87,7 +86,7 @@ namespace SheetsCatalogImport.Data
             public const string PRODUCTS = "Spreadsheet Import";
         }
 
-        public class SheetNames
+        public static class SheetNames
         {
             public const string SHEET_NAME = "VtexCatalogImport";
             public const string PRODUCTS = "ProductsForImport";
@@ -96,7 +95,7 @@ namespace SheetsCatalogImport.Data
             public const string VALIDATION = "Validation";
         }
 
-        public class ProductDisplayModes
+        public static class ProductDisplayModes
         {
             // List of SKUs
             public const string LIST = "LIST";

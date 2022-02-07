@@ -20,7 +20,7 @@ namespace Vtex
             services.AddSingleton<IVtexEnvironmentVariableProvider, VtexEnvironmentVariableProvider>();
             services.AddSingleton<ISheetsCatalogImportRepository, SheetsCatalogImportRepository>();
             services.AddSingleton<IGoogleSheetsService, GoogleSheetsService>();
-            services.AddSingleton<IVtexAPIService, VtexAPIService>();
+            services.AddSingleton<IVtexApiService, VtexApiService>();
             services.AddHttpContextAccessor();
             services.AddHttpClient();
         }

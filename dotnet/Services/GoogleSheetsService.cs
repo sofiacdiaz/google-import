@@ -224,32 +224,24 @@ namespace SheetsCatalogImport.Services
             if (token != null && !string.IsNullOrEmpty(token.RefreshToken))
             {
                 string refreshToken = token.RefreshToken;
-                if (token != null) // && !string.IsNullOrEmpty(token.AccessToken))
+                if (token.ExpiresAt <= DateTime.Now)
                 {
-                    if (token.ExpiresAt <= DateTime.Now)
+                    token = await this.RefreshGoogleAuthorizationToken(refreshToken);
+                    if (token != null)
                     {
-                        token = await this.RefreshGoogleAuthorizationToken(refreshToken);
-                        if (token != null)
+                        token.ExpiresAt = DateTime.Now.AddSeconds(token.ExpiresIn);
+                        if (string.IsNullOrEmpty(token.RefreshToken))
                         {
-                            token.ExpiresAt = DateTime.Now.AddSeconds(token.ExpiresIn);
-                            if (string.IsNullOrEmpty(token.RefreshToken))
-                            {
-                                token.RefreshToken = refreshToken;
-                            }
+                            token.RefreshToken = refreshToken;
+                        }
 
-                            this.ShareToken(token);
-                            bool saved = await _sheetsCatalogImportRepository.SaveToken(token);
-                        }
-                        else
-                        {
-                            _context.Vtex.Logger.Warn("GetGoogleToken", null, $"Could not refresh token.");
-                        }
+                        this.ShareToken(token);
+                        await _sheetsCatalogImportRepository.SaveToken(token);
                     }
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetGoogleToken", null, $"Could not load token. Have Access token?{!string.IsNullOrEmpty(token.AccessToken)} Have Refresh token?{!string.IsNullOrEmpty(token.RefreshToken)}");
-                    token = null;
+                    else
+                    {
+                        _context.Vtex.Logger.Warn("GetGoogleToken", null, $"Could not refresh token.");
+                    }
                 }
             }
             else
@@ -621,7 +613,7 @@ namespace SheetsCatalogImport.Services
 
                     var jsonSerializedMetadata = JsonConvert.SerializeObject(metadata);
 
-                    // POST https://www.googleapis.com/drive/v3/files/fileId/permissions
+                    // POST http://www.googleapis.com/drive/v3/files/fileId/permissions
                     var request = new HttpRequestMessage
                     {
                         Method = HttpMethod.Post,
@@ -780,7 +772,6 @@ namespace SheetsCatalogImport.Services
 
         public async Task<string> CreateSheet()
         {
-            string sheetUrl = string.Empty;
             string sheetName = SheetsCatalogImportConstants.SheetNames.SHEET_NAME;
             string sheetLabel = SheetsCatalogImportConstants.SheetNames.PRODUCTS;
             string instructionsLabel = SheetsCatalogImportConstants.SheetNames.INSTRUCTIONS;
@@ -997,7 +988,7 @@ namespace SheetsCatalogImport.Services
                     }
                 };
 
-                UpdateValuesResponse updateValuesResponse = await this.WriteSpreadsheetValues(sheetId, valueRange);
+                await this.WriteSpreadsheetValues(sheetId, valueRange);
 
                 valueRange = new ValueRange
                 {
@@ -1009,7 +1000,7 @@ namespace SheetsCatalogImport.Services
                     }
                 };
 
-                updateValuesResponse = await this.WriteSpreadsheetValues(sheetId, valueRange);
+                await this.WriteSpreadsheetValues(sheetId, valueRange);
 
                 valueRange = new ValueRange
                 {
@@ -1025,6 +1016,7 @@ namespace SheetsCatalogImport.Services
                         new string[] {"If there are multiple specs, you can seperate them with a line break."},
                         new string[] {"Image links must be public to work properly."},
                         new string[] {"A sku must have an image to be active."},
+                        new string[] {"Catalog V2: When creating a new product, do not specify a Product Id"},
                         new string[] {""},
                         new string[] {"Sample formatting can be seen below:"},
                         new string[] {""},
@@ -1033,7 +1025,7 @@ namespace SheetsCatalogImport.Services
                     }
                 };
 
-                updateValuesResponse = await this.WriteSpreadsheetValues(sheetId, valueRange);
+                await this.WriteSpreadsheetValues(sheetId, valueRange);
 
 
                 BatchUpdate batchUpdate = new BatchUpdate
@@ -1222,7 +1214,7 @@ namespace SheetsCatalogImport.Services
                     }
                 };
                 
-                var updateSheet = await this.UpdateSpreadsheet(sheetId, batchUpdate);
+                await this.UpdateSpreadsheet(sheetId, batchUpdate);
 
                 valueRange = new ValueRange
                 {
@@ -1234,7 +1226,7 @@ namespace SheetsCatalogImport.Services
                     }
                 };
 
-                updateValuesResponse = await this.WriteSpreadsheetValues(sheetId, valueRange);
+                await this.WriteSpreadsheetValues(sheetId, valueRange);
 
                 string importFolderId = null;
                 string accountFolderId = null;
@@ -1325,8 +1317,6 @@ namespace SheetsCatalogImport.Services
                         _context.Vtex.Logger.Info("SheetImport", null, $"Could not find {productsFolderId} folder");
                         return ($"Could not find {productsFolderId} folder");
                     }
-
-                    //folders = await this.ListFolders(productsFolderId);
                 }
 
                 if (folderIds == null)
@@ -1351,11 +1341,10 @@ namespace SheetsCatalogImport.Services
                     await _sheetsCatalogImportRepository.SaveFolderIds(folderIds, accountName);
                 }
 
-                bool moved = await this.MoveFile(sheetId, productsFolderId);
-                bool setPermission = await SetPermission(sheetId);
+                await this.MoveFile(sheetId, productsFolderId);
+                await SetPermission(sheetId);
             }
 
-            string result = string.IsNullOrEmpty(sheetId) ? "Error" : "Created";
             return (await this.GetSheetLink());
         }
 
@@ -1457,7 +1446,6 @@ namespace SheetsCatalogImport.Services
                         {
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
-                                //_context.Vtex.Logger.Warn("WriteSpreadsheetValues", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                 _context.Vtex.Logger.Warn("WriteSpreadsheetValues", null, $"Retrying [{response.StatusCode}] {responseContent} ");
                                 await Task.Delay(1000 * 60);
                                 client = _clientFactory.CreateClient();
@@ -1469,13 +1457,11 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else
                                 {
-                                    //_context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                     _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"Did not update sheet [{response.StatusCode}] {responseContent} ");
                                 }
                             }
                             else
                             {
-                                //_context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"[{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                 _context.Vtex.Logger.Error("WriteSpreadsheetValues", null, $"[{response.StatusCode}] {responseContent} ");
                             }
                         }
@@ -1533,7 +1519,6 @@ namespace SheetsCatalogImport.Services
                         {
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
-                                //_context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Retrying [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                 _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Retrying [{response.StatusCode}] {responseContent} ");
                                 await Task.Delay(1000 * 60);
                                 client = _clientFactory.CreateClient();
@@ -1544,20 +1529,17 @@ namespace SheetsCatalogImport.Services
                                 }
                                 else
                                 {
-                                    //_context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"Did not update sheet [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                     _context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"Did not update sheet [{response.StatusCode}] {responseContent} ");
                                 }
                             }
                             else
                             {
-                                //_context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Did not update sheet. [{response.StatusCode}] {responseContent} {jsonSerializedMetadata}");
                                 _context.Vtex.Logger.Warn("UpdateSpreadsheet", null, $"Did not update sheet. [{response.StatusCode}] {responseContent} ");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        //_context.Vtex.Logger.Error("UpdateSpreadsheet", null, $"{jsonSerializedMetadata}", ex);
                         _context.Vtex.Logger.Error("UpdateSpreadsheet", null, "Update Error", ex);
                     }
                 }
@@ -1762,19 +1744,16 @@ namespace SheetsCatalogImport.Services
                 await _sheetsCatalogImportRepository.SaveFolderIds(folderIds, accountName);
             }
 
-            if (folderIds != null)
+            ListFilesResponse spreadsheets = await this.ListSheetsInFolder(productsFolderId);
+            List<string> links = new List<string>();
+            if (spreadsheets != null)
             {
-                ListFilesResponse spreadsheets = await this.ListSheetsInFolder(productsFolderId);
-                List<string> links = new List<string>();
-                if (spreadsheets != null)
+                foreach (GoogleFile file in spreadsheets.Files)
                 {
-                    foreach (GoogleFile file in spreadsheets.Files)
-                    {
-                        links.Add(file.WebViewLink.ToString());
-                    }
-
-                    sheetUrl = string.Join("<br>", links);
+                    links.Add(file.WebViewLink.ToString());
                 }
+
+                sheetUrl = string.Join("<br>", links);
             }
 
             return (sheetUrl);
@@ -1865,7 +1844,7 @@ namespace SheetsCatalogImport.Services
 
         public async Task<bool> BatchUpdate(string sheetId, BatchUpdate batchUpdate)
         {
-            string result = await this.UpdateSpreadsheet(sheetId, batchUpdate);
+            await this.UpdateSpreadsheet(sheetId, batchUpdate);
             return true;
         }
     }

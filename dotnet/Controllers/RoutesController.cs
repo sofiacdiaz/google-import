@@ -5,18 +5,11 @@
     using SheetsCatalogImport.Services;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.TagHelpers;
     using Newtonsoft.Json;
     using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Net.Http;
-    using System.Runtime.CompilerServices;
-    using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
-    using System.Web;
     using Vtex.Api.Context;
 
     public class RoutesController : Controller
@@ -25,16 +18,16 @@
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _clientFactory;
         private readonly IGoogleSheetsService _googleSheetsService;
-        private readonly IVtexAPIService _vtexAPIService;
+        private readonly IVtexApiService _vtexApiService;
         private readonly ISheetsCatalogImportRepository _sheetsCatalogImportRepository;
 
-        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, IGoogleSheetsService googleSheetsService, IVtexAPIService vtexAPIService, ISheetsCatalogImportRepository SheetsCatalogImportRepository)
+        public RoutesController(IIOServiceContext context, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, IGoogleSheetsService googleSheetsService, IVtexApiService vtexApiService, ISheetsCatalogImportRepository SheetsCatalogImportRepository)
         {
             this._context = context ?? throw new ArgumentNullException(nameof(context));
             this._httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             this._clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
             this._googleSheetsService = googleSheetsService ?? throw new ArgumentNullException(nameof(googleSheetsService));
-            this._vtexAPIService = vtexAPIService ?? throw new ArgumentNullException(nameof(vtexAPIService));
+            this._vtexApiService = vtexApiService ?? throw new ArgumentNullException(nameof(vtexApiService));
             this._sheetsCatalogImportRepository = SheetsCatalogImportRepository ?? throw new ArgumentNullException(nameof(SheetsCatalogImportRepository));
         }
 
@@ -147,7 +140,7 @@
         public async Task<IActionResult> GetCategoryTree()
         {
             Response.Headers.Add("Cache-Control", "no-cache");
-            return Json(await _vtexAPIService.GetCategoryTree(5, string.Empty));
+            return Json(await _vtexApiService.GetCategoryTree(5, string.Empty));
         }
 
         public async Task ClearLock()
@@ -161,7 +154,7 @@
             Response.Headers.Add("Cache-Control", "no-cache");
             var queryString = HttpContext.Request.Query;
             string query = queryString["q"];
-            return Json(await _vtexAPIService.ExportToSheet(query));
+            return Json(await _vtexApiService.ExportToSheet(query));
         }
 
         public async Task<IActionResult> SearchTotals()
@@ -169,13 +162,13 @@
             Response.Headers.Add("Cache-Control", "no-cache");
             var queryString = HttpContext.Request.Query;
             string query = queryString["q"];
-            return Json(await _vtexAPIService.SearchTotal(query));
+            return Json(await _vtexApiService.SearchTotal(query));
         }
 
         public async Task<IActionResult> SetBrandList()
         {
             Response.Headers.Add("Cache-Control", "no-cache");
-            return Json(await _vtexAPIService.SetBrandList());
+            return Json(await _vtexApiService.SetBrandList());
         }
     }
 }

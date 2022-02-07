@@ -1,14 +1,24 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+
+- (CATIMPORT-17) Updated Readme
+
+### Fixed
+
+- Catalog V2 bugfixes
+- (CATIMPORT-22) Fixed bug with updating existing skus when id is defined.
 
 ### Added
 
 - Quality engineering actions
+- (CATIMPORT-23) Validate Image Urls
 
 ## [0.3.1] - 2022-01-05
 

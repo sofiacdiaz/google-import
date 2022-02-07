@@ -56,7 +56,6 @@ namespace SheetsCatalogImport.Models
         public List<ProductV2Image> Images { get; set; }
 
         [JsonProperty("skus")]
-        //public Skus[] Skus { get; set; }
         public List<Skus> Skus { get; set; }
 
         [JsonProperty("channels")]

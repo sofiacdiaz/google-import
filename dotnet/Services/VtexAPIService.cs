@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace SheetsCatalogImport.Services
 {
-    public class VtexAPIService : IVtexAPIService
+    public class VtexApiService : IVtexApiService
     {
         private readonly IIOServiceContext _context;
         private readonly IVtexEnvironmentVariableProvider _environmentVariableProvider;
@@ -23,7 +23,7 @@ namespace SheetsCatalogImport.Services
         private readonly IGoogleSheetsService _googleSheetsService;
         private readonly string _applicationName;
 
-        public VtexAPIService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ISheetsCatalogImportRepository sheetsCatalogImportRepository, IGoogleSheetsService googleSheetsService)
+        public VtexApiService(IIOServiceContext context, IVtexEnvironmentVariableProvider environmentVariableProvider, IHttpContextAccessor httpContextAccessor, IHttpClientFactory clientFactory, ISheetsCatalogImportRepository sheetsCatalogImportRepository, IGoogleSheetsService googleSheetsService)
         {
             this._context = context ??
                             throw new ArgumentNullException(nameof(context));
@@ -71,7 +71,6 @@ namespace SheetsCatalogImport.Services
             StringBuilder sb = new StringBuilder();
 
             string importFolderId = null;
-            string accountFolderId = null;
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
 
             FolderIds folderIds = await _sheetsCatalogImportRepository.LoadFolderIds(accountName);
@@ -87,23 +86,16 @@ namespace SheetsCatalogImport.Services
                 if(appSettings != null)
                 {
                     isCatalogV2 = appSettings.IsV2Catalog;
-                    //if(!string.IsNullOrEmpty(appSettings.AccountName))
-                    //{
-                    //    accountName = appSettings.AccountName;
-                    //}
                 }
 
                 var sheetIds = spreadsheets.Files.Select(s => s.Id);
                 foreach (var sheetId in sheetIds)
                 {
                     Dictionary<string, int> headerIndexDictionary = new Dictionary<string, int>();
-                    Dictionary<string, string> columns = new Dictionary<string, string>();
                     string sheetContent = await _googleSheetsService.GetSheet(sheetId, string.Empty);
-                    //_context.Vtex.Logger.Debug("SheetImport", null, $"[{sheetIds}] sheetContent: {sheetContent} ");
 
                     if (string.IsNullOrEmpty(sheetContent))
                     {
-                        //await ClearLockAfterDelay(5000);
                         response.Message = "Empty Spreadsheet Response.";
                         return response;
                     }
@@ -128,7 +120,6 @@ namespace SheetsCatalogImport.Services
                     string statusColumnLetter = await GetColumnLetter(headerIndexDictionary["status"]);
                     string messageColumnLetter = await GetColumnLetter(headerIndexDictionary["message"]);
 
-                    string previousProductId = string.Empty;
                     for (int index = 1; index < rowCount; index++)
                     {
                         success = true;
@@ -158,9 +149,6 @@ namespace SheetsCatalogImport.Services
                         string sellingPrice = null;
                         string availableQuantity = null;
                         string productSpecs = null;
-                        string productSpecGroup = null;
-                        string productSpecField = null;
-                        string productSpecValue = null;
                         string skuSpecs = null;
                         string tradePolicyId = null;
                         string[] dataValues = googleSheet.ValueRanges[0].Values[index];
@@ -216,12 +204,6 @@ namespace SheetsCatalogImport.Services
                             availableQuantity = dataValues[headerIndexDictionary["available quantity"]];
                         if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValues.Count())
                             productSpecs = dataValues[headerIndexDictionary["productspecs"]];
-                        if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValues.Count())
-                            productSpecGroup = dataValues[headerIndexDictionary["product spec group"]];
-                        if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValues.Count())
-                            productSpecField = dataValues[headerIndexDictionary["product spec field"]];
-                        if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValues.Count())
-                            productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
                         if (headerIndexDictionary.ContainsKey("sku specs") && headerIndexDictionary["sku specs"] < dataValues.Count())
                             skuSpecs = dataValues[headerIndexDictionary["sku specs"]];
                         if (headerIndexDictionary.ContainsKey("trade policy id") && headerIndexDictionary["trade policy id"] < dataValues.Count())
@@ -260,15 +242,12 @@ namespace SheetsCatalogImport.Services
                             {
                                 success = true;
                                 string brandId = string.Empty;
-                                //string brandId = "1";
                                 try
                                 {
                                     GetBrandListV2Response getBrandList = await GetBrandListV2(accountName);
                                     if (getBrandList != null)
                                     {
-                                        //Console.WriteLine($"getBrandList: {getBrandList.Metadata.Total}");
                                         List<Datum> brandList = getBrandList.Data.Where(b => b.Name.Contains(brand, StringComparison.OrdinalIgnoreCase)).ToList();
-                                        //Console.WriteLine($"brandList: {brandList.Count}");
                                         try
                                         {
                                             brandId = brandList.Select(b => b.Id).FirstOrDefault().ToString();
@@ -296,7 +275,6 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch(Exception ex)
                                 {
-                                    //Console.WriteLine($"Brand ERROR: {ex.Message}");
                                     _context.Vtex.Logger.Error("ProcessSheet", "BrandV2", $"Error with Brand '{brand}' {brandId}", ex);
                                 }
 
@@ -306,7 +284,6 @@ namespace SheetsCatalogImport.Services
                                     GetCategoryListV2Response getCategoryList = await GetCategoryListV2(accountName);
                                     if (getCategoryList != null)
                                     {
-                                        //Console.WriteLine($"getCategoryList: {getCategoryList.Roots.Length}");
                                         var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
                                         try
                                         {
@@ -335,7 +312,6 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    //Console.WriteLine($"Category ERROR: {ex.Message}");
                                     _context.Vtex.Logger.Error("ProcessSheet", "CategoryV2", $"Error with Category '{category}' {categoryId}", ex);
                                 }
 
@@ -347,74 +323,14 @@ namespace SheetsCatalogImport.Services
                                     BrandName = brand,
                                     ExternalId = string.IsNullOrWhiteSpace(productReferenceCode) ? null : productReferenceCode,
                                     Description = productDescription,
-                                    //KeyWords = searchKeywords,
-                                    //MetaTagDescription = metaTagDescription,
-                                    //ShowWithoutStock = await ParseBool(displayIfOutOfStock),
                                     Images = new List<ProductV2Image>(),
                                     Status = "active",
                                     Condition = "new",
                                     Type = "physical",
                                     BrandId = brandId,
                                     CategoryIds = new string[]{ categoryId },
-                                    //Attributes = new AttributeV2[2]
-                                    //{
-                                    //    new AttributeV2{
-                                    //        Name = "Search Keywords",
-                                    //        Value = searchKeywords,
-                                    //        Description = "",
-                                    //        IsFilterable = false
-                                    //    },
-                                    //    new AttributeV2{
-                                    //        Name = "Metatag Description",
-                                    //        Value = metaTagDescription,
-                                    //        Description = "",
-                                    //        IsFilterable = false
-                                    //    }
-                                    //},
-                                    //Skus = new Skus[]
-                                    //{
-                                    //    new Skus
-                                    //    {
-                                    //        Id = skuid,
-                                    //        IsActive = false,
-                                    //        //Name = skuName,
-                                    //        ExternalId = skuReferenceCode,
-                                    //        Dimensions = new ProductV2Dimensions
-                                    //        {
-                                    //            Height = await ParseDouble(height),
-                                    //            Length = await ParseDouble(length),
-                                    //            Width = await ParseDouble(width),
-                                    //        },
-                                    //        Weight = await ParseDouble(weight),
-                                    //        //Images = new ProductV2Image[]
-                                    //        //{
-                                    //        //    new ProductV2Image{},
-                                    //        //    new ProductV2Image{},
-                                    //        //    new ProductV2Image{},
-                                    //        //    new ProductV2Image{},
-                                    //        //    new ProductV2Image{}
-                                    //        //},
-                                    //        Sellers = new Seller[]{},
-                                    //        Name = skuName,
-                                    //        Ean = skuEanGtin
-                                    //    }
-                                    //}
                                     Skus = new List<Skus>()
                                 };
-
-                                if(string.IsNullOrEmpty(productRequest.Id) && !string.IsNullOrEmpty(previousProductId))
-                                {
-                                    if(await this.PreviousLineIsSameProduct(headerIndexDictionary, googleSheet.ValueRanges[0].Values, index))
-                                    {
-                                        productRequest.Id = previousProductId;
-                                        sb.AppendLine($"Setting product id to '{previousProductId}'");
-                                        //Console.WriteLine($"Setting product id to '{previousProductId}'");
-                                    }
-                                    else
-                                    {
-                                        previousProductId = string.Empty;
-                                    }
-                                }
 
                                 // Add the sku for the current line, then check the next line and add sku if the the product is the same
                                 SkusSpec[] skusSpecs = null;
@@ -422,33 +338,29 @@ namespace SheetsCatalogImport.Services
                                 {
                                     try
                                     {
-                                        string[] allSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                        skusSpecs = new SkusSpec[allSpecs.Length];
-                                        for (int i = 0; i < allSpecs.Length; i++)
+                                        string[] allSkuSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                        skusSpecs = new SkusSpec[allSkuSpecs.Length];
+                                        for (int i = 0; i < allSkuSpecs.Length; i++)
                                         {
-                                            string groupName = "Default";
-                                            bool rootLevelSpecification = false;
-                                            string[] specsArr = allSpecs[i].Split(':');
-                                            string specName = specsArr[0];
-                                            if (specName.First().Equals('.'))
+                                            string[] skuSpecsArr = allSkuSpecs[i].Split(':');
+                                            string skuSpecName = skuSpecsArr[0];
+                                            if (skuSpecName.First().Equals('.'))
                                             {
-                                                rootLevelSpecification = true;
-                                                specName = specName.Substring(1);
+                                                skuSpecName = skuSpecName.Substring(1);
                                             }
 
-                                            if (specName.Contains("!"))
+                                            if (skuSpecName.Contains("!"))
                                             {
-                                                string[] specGroup = specName.Split('!');
-                                                groupName = specGroup[0];
-                                                specName = specGroup[1];
+                                                string[] skuSpecGroup = skuSpecName.Split('!');
+                                                skuSpecName = skuSpecGroup[1];
                                             }
 
-                                            string specValue = specsArr[1];
+                                            string skuSpecValue = skuSpecsArr[1];
 
                                             SkusSpec skuSpec = new SkusSpec
                                             {
-                                                Name = specName,
-                                                Value = specValue
+                                                Name = skuSpecName,
+                                                Value = skuSpecValue
                                             };
 
                                             skusSpecs[i] = skuSpec;
@@ -462,15 +374,20 @@ namespace SheetsCatalogImport.Services
                                     }
                                 }
 
-                                if (string.IsNullOrEmpty(skuName) && string.IsNullOrEmpty(skuid))
+                                if (string.IsNullOrWhiteSpace(skuName) && string.IsNullOrWhiteSpace(skuid))
                                 {
                                     sb.AppendLine("Missing sku info");
                                 }
                                 else
                                 {
+                                    if(string.IsNullOrWhiteSpace(skuReferenceCode))
+                                    {
+                                        skuReferenceCode = null;
+                                    }
+
                                     Skus sku = new Skus
                                     {
-                                        Id = skuid,
+                                        Id = string.IsNullOrWhiteSpace(skuid) ? null : skuid,
                                         IsActive = activateSku,
                                         ExternalId = skuReferenceCode,
                                         Dimensions = new ProductV2Dimensions
@@ -489,181 +406,79 @@ namespace SheetsCatalogImport.Services
                                     productRequest.Skus.Add(sku);
                                 }
 
-                                //for(int lineNumber = index; lineNumber <= rowCount; lineNumber++)
-                                //{
-                                //    string skuidNext = null;
-                                //    string skuReferenceCodeNext = null;
-                                //    string heightNext = null;
-                                //    string lengthNext = null;
-                                //    string widthNext = null;
-                                //    string weightNext = null;
-                                //    string skuNameNext = null;
-                                //    string skuEanGtinNext = null;
-                                //    string skuSpecsNext = null;
-
-                                //    if (await this.NextLineIsSameProduct(headerIndexDictionary, googleSheet.ValueRanges[0].Values, lineNumber))
-                                //    {
-                                //        Console.WriteLine($"!!! Line {lineNumber+1} is the same as {lineNumber} !!!");
-                                //        string[] arrLineValuesToWriteSkip = new string[] { "TBD", "Combining..." };
-                                //        arrValuesToWrite[index - offset - 1] = arrLineValuesToWriteSkip;
-                                //        index++;
-
-                                //        string[] dataValuesNext = googleSheet.ValueRanges[0].Values[lineNumber+1];
-                                //        if (headerIndexDictionary.ContainsKey("skuid") && headerIndexDictionary["skuid"] < dataValues.Count())
-                                //            skuidNext = dataValues[headerIndexDictionary["skuid"]];
-                                //        if (headerIndexDictionary.ContainsKey("skuname") && headerIndexDictionary["skuname"] < dataValues.Count())
-                                //            skuNameNext = dataValues[headerIndexDictionary["skuname"]];
-                                //        if (headerIndexDictionary.ContainsKey("sku ean/gtin") && headerIndexDictionary["sku ean/gtin"] < dataValues.Count())
-                                //            skuEanGtinNext = dataValues[headerIndexDictionary["sku ean/gtin"]];
-                                //        if (headerIndexDictionary.ContainsKey("sku reference code") && headerIndexDictionary["sku reference code"] < dataValues.Count())
-                                //            skuReferenceCodeNext = dataValues[headerIndexDictionary["sku reference code"]];
-                                //        if (headerIndexDictionary.ContainsKey("height") && headerIndexDictionary["height"] < dataValues.Count())
-                                //            heightNext = dataValues[headerIndexDictionary["height"]];
-                                //        if (headerIndexDictionary.ContainsKey("width") && headerIndexDictionary["width"] < dataValues.Count())
-                                //            widthNext = dataValues[headerIndexDictionary["width"]];
-                                //        if (headerIndexDictionary.ContainsKey("length") && headerIndexDictionary["length"] < dataValues.Count())
-                                //            lengthNext = dataValues[headerIndexDictionary["length"]];
-                                //        if (headerIndexDictionary.ContainsKey("weight") && headerIndexDictionary["weight"] < dataValues.Count())
-                                //            weightNext = dataValues[headerIndexDictionary["weight"]];
-                                //        if (headerIndexDictionary.ContainsKey("sku specs") && headerIndexDictionary["sku specs"] < dataValues.Count())
-                                //            skuSpecsNext = dataValues[headerIndexDictionary["sku specs"]];
-
-                                //        SkusSpec[] skusSpecsNext = null;
-                                //        if (!string.IsNullOrEmpty(skuSpecsNext))
-                                //        {
-                                //            try
-                                //            {
-                                //                string[] allSpecs = skuSpecsNext.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                //                skusSpecsNext = new SkusSpec[allSpecs.Length];
-                                //                for (int i = 0; i < allSpecs.Length; i++)
-                                //                {
-                                //                    string[] specsArr = allSpecs[i].Split(':');
-                                //                    string specName = specsArr[0];
-                                //                    string specValue = specsArr[1];
-
-                                //                    SkusSpec skuSpec = new SkusSpec
-                                //                    {
-                                //                        Name = specName,
-                                //                        Value = specValue
-                                //                    };
-
-                                //                    skusSpecsNext[i] = skuSpec;
-                                //                }
-                                //            }
-                                //            catch (Exception ex)
-                                //            {
-                                //                success = false;
-                                //                sb.AppendLine($"Error processing Sku Specifications.");
-                                //                _context.Vtex.Logger.Error("ProcessSheet", null, "Error processing Sku Spec", ex);
-                                //            }
-                                //        }
-
-                                //        Skus skuNext = new Skus
-                                //        {
-                                //            Id = skuidNext,
-                                //            IsActive = false,
-                                //            ExternalId = skuReferenceCodeNext,
-                                //            Dimensions = new ProductV2Dimensions
-                                //            {
-                                //                Height = await ParseDouble(heightNext),
-                                //                Length = await ParseDouble(lengthNext),
-                                //                Width = await ParseDouble(widthNext),
-                                //            },
-                                //            Weight = await ParseDouble(weightNext),
-                                //            Sellers = new Seller[] { },
-                                //            Name = skuNameNext,
-                                //            Ean = skuEanGtinNext,
-                                //            Specs = skusSpecsNext
-                                //        };
-
-                                //        productRequest.Skus.Add(skuNext);
-                                //    }
-                                //    else
-                                //    {
-                                //        break;
-                                //    }
-                                //}
-
-                                if (!string.IsNullOrEmpty(searchKeywords) && !string.IsNullOrEmpty(metaTagDescription))
+                                if (!string.IsNullOrWhiteSpace(searchKeywords) && !string.IsNullOrWhiteSpace(metaTagDescription))
                                 {
-                                    //Console.WriteLine("Search Keywords & Metatag Description");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
                                         {
                                             Name = "Search Keywords",
                                             Value = searchKeywords,
-                                            Description = "",
+                                            Description = string.Empty,
                                             IsFilterable = false
                                         },
                                         new AttributeV2
                                         {
                                             Name = "Metatag Description",
                                             Value = metaTagDescription,
-                                            Description = "",
+                                            Description = string.Empty,
                                             IsFilterable = false
                                         }
                                     };
                                 }
-                                else if(string.IsNullOrEmpty(searchKeywords))
+                                else if(!string.IsNullOrWhiteSpace(searchKeywords))
                                 {
-                                    //Console.WriteLine("Search Keywords only");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
                                         {
                                             Name = "Search Keywords",
                                             Value = searchKeywords,
-                                            Description = "",
+                                            Description = string.Empty,
                                             IsFilterable = false
                                         }
                                     };
                                 }
-                                else if (!string.IsNullOrEmpty(metaTagDescription))
+                                else if (!string.IsNullOrWhiteSpace(metaTagDescription))
                                 {
-                                    //Console.WriteLine("Metatag Description only");
                                     productRequest.Attributes = new AttributeV2[]
                                     {
                                         new AttributeV2
                                         {
                                             Name = "Metatag Description",
                                             Value = metaTagDescription,
-                                            Description = "",
+                                            Description = string.Empty,
                                             IsFilterable = false
                                         }
                                     };
                                 }
 
-                                if (!string.IsNullOrEmpty(productSpecs))
+                                if (!string.IsNullOrWhiteSpace(productSpecs))
                                 {
                                     try
                                     {
-                                        string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                        productRequest.Specs = new ProductV2Spec[allSpecs.Length];
-                                        for (int i = 0; i < allSpecs.Length; i++)
+                                        string[] allProdSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                        productRequest.Specs = new ProductV2Spec[allProdSpecs.Length];
+                                        for (int i = 0; i < allProdSpecs.Length; i++)
                                         {
-                                            string groupName = "Default";
-                                            bool rootLevelSpecification = false;
-                                            string[] specsArr = allSpecs[i].Split(':');
-                                            string specName = specsArr[0];
-                                            if (specName.First().Equals('.'))
+                                            string[] prodSpecsArr = allProdSpecs[i].Split(':');
+                                            string prodSpecName = prodSpecsArr[0];
+                                            if (prodSpecName.First().Equals('.'))
                                             {
-                                                rootLevelSpecification = true;
-                                                specName = specName.Substring(1);
+                                                prodSpecName = prodSpecName.Substring(1);
                                             }
 
-                                            if (specName.Contains("!"))
+                                            if (prodSpecName.Contains("!"))
                                             {
-                                                string[] specGroup = specName.Split('!');
-                                                groupName = specGroup[0];
-                                                specName = specGroup[1];
+                                                string[] prodSpecGroup = prodSpecName.Split('!');
+                                                prodSpecName = prodSpecGroup[1];
                                             }
 
-                                            string[] specValueArr = specsArr[1].Split(',');
+                                            string[] specValueArr = prodSpecsArr[1].Split(',');
 
                                             ProductV2Spec prodSpec = new ProductV2Spec
                                             {
-                                                Name = specName,
+                                                Name = prodSpecName,
                                                 Values = specValueArr
                                             };
 
@@ -678,62 +493,67 @@ namespace SheetsCatalogImport.Services
                                     }
                                 }
 
-                                //if (!string.IsNullOrEmpty(skuSpecs))
-                                //{
-                                //    try
-                                //    {
-                                //        string[] allSpecs = skuSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                //        productRequest.Skus[0].Specs = new SkusSpec[allSpecs.Length];
-                                //        for (int i = 0; i < allSpecs.Length; i++)
-                                //        {
-                                //            string[] specsArr = allSpecs[i].Split(':');
-                                //            string specName = specsArr[0];
-                                //            string specValue = specsArr[1];
-
-                                //            SkusSpec skuSpec = new SkusSpec
-                                //            {
-                                //                Name = specName,
-                                //                Value = specValue
-                                //            };
-
-                                //            productRequest.Skus[0].Specs[i] = skuSpec;
-                                //        }
-                                //    }
-                                //    catch(Exception ex)
-                                //    {
-                                //        success = false;
-                                //        sb.AppendLine($"Error processing Sku Specifications.");
-                                //        _context.Vtex.Logger.Error("ProcessSheet", null, "Error processing Sku Spec", ex);
-                                //    }
-                                //}
-
                                 try
                                 {
-                                    //Console.WriteLine(" - imagesList - ");
                                     List<ProductV2Image> imagesList = new List<ProductV2Image>();
                                     if(!string.IsNullOrEmpty(imageUrl1))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl1, Alt = "Main", Id = "Main" });
+                                        if (imageUrl1.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl1, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl1, Alt = "Main", Id = "Main" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 1 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl2))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl2, Alt = "Alt 1", Id = "Alt 1" });
+                                        if (imageUrl2.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl2, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl2, Alt = "Alt 1", Id = "Alt 1" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 2 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl3))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl3, Alt = "Alt 2", Id = "Alt 2" });
+                                        if (imageUrl3.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl3, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl3, Alt = "Alt 2", Id = "Alt 2" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 3 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl4))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl4, Alt = "Alt 3", Id = "Alt 3" });
+                                        if (imageUrl4.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl4, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl4, Alt = "Alt 3", Id = "Alt 3" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 4 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(!string.IsNullOrEmpty(imageUrl5))
                                     {
-                                        imagesList.Add(new ProductV2Image{Url = imageUrl5, Alt = "Alt 4", Id = "Alt 4" });
+                                        if (imageUrl5.StartsWith("http") && Uri.IsWellFormedUriString(imageUrl5, UriKind.RelativeOrAbsolute))
+                                        {
+                                            imagesList.Add(new ProductV2Image { Url = imageUrl5, Alt = "Alt 4", Id = "Alt 4" });
+                                        }
+                                        else
+                                        {
+                                            sb.AppendLine("Image 5 - Invalid URL format.");
+                                        }
                                     }
 
                                     if(imagesList.Count > 0)
@@ -759,79 +579,66 @@ namespace SheetsCatalogImport.Services
 
                                     if (existingProduct != null)
                                     {
+                                        sb.AppendLine($"Existing Product '{productRequest.Id}'");
                                         productRequest = await this.MergeProductRequestV2(existingProduct, productRequest);
                                         productV2Response = await this.UpdateProductV2(productRequest);
                                     }
-                                    else
+                                    else if (string.IsNullOrEmpty(productRequest.Id))
                                     {
                                         productV2Response = await this.CreateProductV2(productRequest);
                                         if (productV2Response != null)
                                         {
-                                            if (productV2Response.Success)
+                                            if (!productV2Response.Success && productV2Response.StatusCode.Equals("Conflict") && doUpdate)
                                             {
-                                                try
+                                                sb.AppendLine($"[{productV2Response.StatusCode}] {productV2Response.Message}");
+                                                if (productV2Response.Message.Contains("A product with external id "))
                                                 {
-                                                    ProductResponseV2 productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(productV2Response.Message);
-                                                    previousProductId = productResponseV2.Id;
+                                                    string[] splitResponse = productV2Response.Message.Split("\"");
+                                                    string externalId = splitResponse[1];
+                                                    existingProduct = await GetProductByExternalIdV2(externalId);
                                                 }
-                                                catch (Exception ex)
+
+                                                if (existingProduct != null && !string.IsNullOrEmpty(productRequest.Id))
                                                 {
-                                                    //Console.WriteLine($"Response Parse Error: {ex.Message}");
-                                                    sb.AppendLine($"Response Parse Error: {ex.Message}");
+                                                    existingProduct = await this.GetProductV2(productRequest.Id);
                                                 }
-                                            }
-                                            else
-                                            {
-                                                if (productV2Response.StatusCode.Contains("Conflict"))
+
+                                                if (existingProduct != null)
                                                 {
-                                                    Console.WriteLine($"(productV2Response.StatusCode.Contains(Conflict) {productV2Response.Message} {productV2Response.Results}");
+                                                    productRequest.Id = existingProduct.Id;
+                                                    sb.AppendLine($"Updating Existing Product Id '{productRequest.Id}'");
+                                                    productRequest = await this.MergeProductRequestV2(existingProduct, productRequest);
+                                                    productV2Response = await this.UpdateProductV2(productRequest);
+                                                }
+                                                else
+                                                {
+                                                    sb.AppendLine($"Updating Product Id '{productRequest.Id}'");
+                                                    productV2Response = await this.UpdateProductV2(productRequest);
                                                 }
                                             }
                                         }
                                         else
                                         {
-                                            Console.WriteLine("CreateProductV2 NULL Response!");
+                                            _context.Vtex.Logger.Warn("CreateProductV2", null, "CreateProductV2 NULL Response!");
                                         }
+                                    }
+                                    else
+                                    {
+                                        sb.AppendLine($"Product with Id '{productRequest.Id}' does not exist.");
+                                        sb.AppendLine("Clear 'ProductId' cell to create new product.");
                                     }
 
                                     success &= productV2Response.Success;
-                                    //if (productV2Response.Success)
-                                    //{
-                                    //    sb.AppendLine($"ProductV2 : [{productV2Response.StatusCode}] ");
-                                    //}
-                                    //else
-                                    //{
-                                        Console.WriteLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
-                                        sb.AppendLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
-                                    //}
+
+                                    Console.WriteLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
+                                    sb.AppendLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
                                     success = false;
                                     Console.WriteLine($"ProductV2: (err): {ex.Message}");
                                     sb.AppendLine($"ProductV2 (err): {ex.Message}");
                                 }
-
-                                //try
-                                //{
-                                //    ExtraInfo extraInfo = new ExtraInfo
-                                //    {
-                                //        ProductId = productid,
-                                //        StoreFront = new StoreFront
-                                //        {
-                                //            ShowOutOfStock = await ParseBool(displayIfOutOfStock)
-                                //        }
-                                //    };
-
-                                //    UpdateResponse productV2Response = await this.ExtraInfo(extraInfo);
-                                //    success &= productV2Response.Success;
-                                //    sb.AppendLine($"ExtraInfoV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
-                                //}
-                                //catch(Exception ex)
-                                //{
-                                //    success = false;
-                                //    sb.AppendLine($"ExtraInfoV2: {ex.Message}");
-                                //}
                             }
                             else    // Catalog V1
                             {
@@ -863,8 +670,6 @@ namespace SheetsCatalogImport.Services
                                     productId = productResponse.Id;
                                     sb.AppendLine($"New Product Id {productId}");
                                     success = true;
-                                    // Pause after creation to allow for caching
-                                    //await Task.Delay(1000 * 2);
                                 }
                                 else if (productUpdateResponse.StatusCode.Equals("Conflict"))
                                 {
@@ -878,7 +683,6 @@ namespace SheetsCatalogImport.Services
 
                                         if(doUpdate)
                                         {
-                                            //success = true;
                                             productUpdateResponse = await this.UpdateProduct(productid, productRequest);
                                             success = productUpdateResponse.Success;
                                             sb.AppendLine($"Product Update: [{productUpdateResponse.StatusCode}] {productUpdateResponse.Message}");
@@ -897,6 +701,13 @@ namespace SheetsCatalogImport.Services
                                                 productid = productId.ToString();
                                                 success = true;
                                                 sb.AppendLine($"Using Product Id {productId}");
+
+                                                if (doUpdate)
+                                                {
+                                                    productUpdateResponse = await this.UpdateProduct(productid, productRequest);
+                                                    success = productUpdateResponse.Success;
+                                                    sb.AppendLine($"Product Update: [{productUpdateResponse.StatusCode}] {productUpdateResponse.Message}");
+                                                }
                                             }
                                             else
                                             {
@@ -929,7 +740,7 @@ namespace SheetsCatalogImport.Services
                                     skuRequest = new SkuRequest
                                     {
                                         Id = await ParseLong(skuid),
-                                        ProductId = productId, //await ParseLong(productid) ?? 0,
+                                        ProductId = productId,
                                         IsActive = false,
                                         Name = skuName,
                                         RefId = skuReferenceCode,
@@ -972,18 +783,20 @@ namespace SheetsCatalogImport.Services
                                                 {
                                                     success &= true;
                                                     sb.AppendLine($"Using Sku Id {skuid}");
+                                                    if(doUpdate)
+                                                    {
+                                                        skuUpdateResponse = await this.UpdateSku(skuid, skuRequest);
+                                                        success &= skuUpdateResponse.Success;
+                                                        sb.AppendLine($"Sku Update: [{skuUpdateResponse.StatusCode}] {skuUpdateResponse.Message}");
+                                                    }
                                                 }
                                             }
                                         }
-                                        else if (skuUpdateResponse.Message.Contains("Sku already created with this Id"))
+                                        else if (skuUpdateResponse.Message.Contains("Sku already created with this Id") && doUpdate)
                                         {
-                                            if (doUpdate)
-                                            {
-                                                //success &= true;
                                                 skuUpdateResponse = await this.UpdateSku(skuid, skuRequest);
                                                 success &= skuUpdateResponse.Success;
                                                 sb.AppendLine($"Sku Update: [{skuUpdateResponse.StatusCode}] {skuUpdateResponse.Message}");
-                                            }
                                         }
                                     }
                                     else
@@ -1098,7 +911,6 @@ namespace SheetsCatalogImport.Services
                                     else
                                     {
                                         sb.AppendLine($"Price: Empty");
-                                        //success = false;
                                     }
                                 }
                                 catch (Exception ex)
@@ -1114,7 +926,6 @@ namespace SheetsCatalogImport.Services
                                     if (!string.IsNullOrEmpty(availableQuantity))
                                     {
                                         GetWarehousesResponse[] getWarehousesResponse = await GetWarehouses();
-                                        //GetWarehousesResponse[] getWarehousesResponse = await ListAllWarehouses();
                                         if (getWarehousesResponse != null)
                                         {
                                             string warehouseId = getWarehousesResponse.Select(w => w.Id).FirstOrDefault();
@@ -1158,34 +969,34 @@ namespace SheetsCatalogImport.Services
                                     {
                                         try
                                         {
-                                            string[] allSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                                            for (int i = 0; i < allSpecs.Length; i++)
+                                            string[] allProdSpecs = productSpecs.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                                            for (int i = 0; i < allProdSpecs.Length; i++)
                                             {
-                                                string groupName = "Default";
+                                                string prodGroupName = "Default";
                                                 bool rootLevelSpecification = false;
-                                                string[] specsArr = allSpecs[i].Split(':');
-                                                string specName = specsArr[0];
-                                                if(specName.First().Equals('.'))
+                                                string[] prodSpecsArr = allProdSpecs[i].Split(':');
+                                                string prodSpecName = prodSpecsArr[0];
+                                                if(prodSpecName.First().Equals('.'))
                                                 {
                                                     rootLevelSpecification = true;
-                                                    specName = specName.Substring(1);
+                                                    prodSpecName = prodSpecName.Substring(1);
                                                 }
 
-                                                if(specName.Contains("!"))
+                                                if(prodSpecName.Contains("!"))
                                                 {
-                                                    string[] specGroup = specName.Split('!');
-                                                    groupName = specGroup[0];
-                                                    specName = specGroup[1];
+                                                    string[] prodSpecGroup = prodSpecName.Split('!');
+                                                    prodGroupName = prodSpecGroup[0];
+                                                    prodSpecName = prodSpecGroup[1];
                                                 }
                                                 
-                                                string[] specValueArr = specsArr[1].Split(',');
+                                                string[] prodSpecValueArr = prodSpecsArr[1].Split(',');
 
                                                 SpecAttr prodSpec = new SpecAttr
                                                 {
-                                                    GroupName = groupName,
+                                                    GroupName = prodGroupName,
                                                     RootLevelSpecification = rootLevelSpecification,
-                                                    FieldName = specName,
-                                                    FieldValues = specValueArr
+                                                    FieldName = prodSpecName,
+                                                    FieldValues = prodSpecValueArr
                                                 };
 
                                                 UpdateResponse prodSpecResponse = await this.SetProdSpecs(productId.ToString(), prodSpec);
@@ -1314,7 +1125,6 @@ namespace SheetsCatalogImport.Services
                             else
                             {
                                 errorCount++;
-                                //_context.Vtex.Logger.Debug("ProcessSheet", null, $"Line {index}\r{string.Join('\n', dataValues)}");
                                 _context.Vtex.Logger.Warn("ProcessSheet", null, $"Line {index}\n{sb}");
                             }
                             
@@ -1356,7 +1166,7 @@ namespace SheetsCatalogImport.Services
                         }
                     };
 
-                    string resize = await _googleSheetsService.UpdateSpreadsheet(sheetId, batchUpdate);
+                    await _googleSheetsService.UpdateSpreadsheet(sheetId, batchUpdate);
                 }
             }
 
@@ -1407,13 +1217,12 @@ namespace SheetsCatalogImport.Services
                     else if (queryType.ToLower().Equals("brand"))
                     {
                         GetBrandListResponse[] brandList = await GetBrandList(string.Empty);
-                        List<GetBrandListResponse> brand = brandList.Where(b => b.Name.Contains(queryParam, StringComparison.OrdinalIgnoreCase)).ToList();
                     }
                     else if (queryType.ToLower().Equals("productid"))
                     {
                         searchTotals.Products++;
                         List<ProductSkusResponse> productSkusResponse = await this.GetSkusFromProductId(queryParam);
-                        searchTotals.Skus += productSkusResponse.Count();
+                        searchTotals.Skus += productSkusResponse.Count;
                     }
                     else if (queryType.ToLower().Equals("product"))
                     {
@@ -1424,7 +1233,7 @@ namespace SheetsCatalogImport.Services
                             {
                                 searchTotals.Products++;
                                 List<ProductSkusResponse> productSkusResponse = await this.GetSkusFromProductId(productSearchResponse.ProductId);
-                                searchTotals.Skus += productSkusResponse.Count();
+                                searchTotals.Skus += productSkusResponse.Count;
                             }
                         }
                     }
@@ -1441,7 +1250,6 @@ namespace SheetsCatalogImport.Services
             int writeBlockSize = 5;
             string[][] arrayToWrite = new string[writeBlockSize+1][];
             string importFolderId = null;
-            string accountFolderId = null;
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
 
             FolderIds folderIds = await _sheetsCatalogImportRepository.LoadFolderIds(accountName);
@@ -1457,7 +1265,6 @@ namespace SheetsCatalogImport.Services
                 foreach (var sheetId in sheetIds)
                 {
                     Dictionary<string, int> headerIndexDictionary = new Dictionary<string, int>();
-                    Dictionary<string, string> columns = new Dictionary<string, string>();
                     string sheetContent = await _googleSheetsService.GetSheet(sheetId, string.Empty);
 
                     if (string.IsNullOrEmpty(sheetContent))
@@ -1479,7 +1286,6 @@ namespace SheetsCatalogImport.Services
                     List<string> productIdsToExport = new List<string>();
                     GetCategoryTreeResponse[] categoryTree = await this.GetCategoryTree(10, accountName);
                     Dictionary<long, string> categoryIds = await GetCategoryId(categoryTree);
-                    //GetBrandListResponse[] brandList = await GetBrandList();
                     if (!string.IsNullOrEmpty(query))
                     {
                         string[] queryArr = query.Split(':');
@@ -1517,7 +1323,6 @@ namespace SheetsCatalogImport.Services
                         else if (queryType.ToLower().Equals("brand"))
                         {
                             GetBrandListResponse[] brandList = await GetBrandList(string.Empty);
-                            List<GetBrandListResponse> brand = brandList.Where(b => b.Name.Contains(queryParam, StringComparison.OrdinalIgnoreCase)).ToList();
                         }
                         else if (queryType.ToLower().Equals("productid"))
                         {
@@ -1562,15 +1367,6 @@ namespace SheetsCatalogImport.Services
                                         _context.Vtex.Logger.Error("ExportToSheet", "GetSkuAndContext", $"Error getting Sku and Context for skuId {productSkusResponse.Id}", ex);
                                     }
 
-                                    //string brandName = brandList.Where(b => b.Id.Equals(getProductByIdResponse.BrandId)).Select(b => b.Name).FirstOrDefault();
-                                    //string[] eans = await GetEansBySkuId(skuId);
-                                    //string ean = string.Empty;
-                                    //if (eans != null)
-                                    //{
-                                    //    ean = string.Join("\n", eans);
-                                    //}
-
-                                    //GetSkuImagesResponse[] skuImages = await GetSkuImages(skuAndContextResponse.Id.ToString());
                                     GetPriceResponse getPriceResponse = await GetPrice(skuAndContextResponse.Id.ToString());
                                     StringBuilder prodSpecs = new StringBuilder();
                                     ProductSpecification[] productSpecifications = await GetProductSpecifications(productId);
@@ -1594,7 +1390,6 @@ namespace SheetsCatalogImport.Services
                                         }
                                     }
 
-                                    //arrayToWrite[index] = new string[] { productId, skuId.ToString(), categoryIds[categoryId], brandName, getProductByIdResponse.Name, getProductByIdResponse.RefId, skuAndContextResponse.NameComplete, "EAN", "SKU REF", skuAndContextResponse.Dimension.Height.ToString(), skuAndContextResponse.Dimension.Width.ToString(), skuAndContextResponse.Dimension.Length.ToString(), skuAndContextResponse.Dimension.Weight.ToString(), getProductByIdResponse.Description, "SEARCH KEYWORDS", getProductByIdResponse.MetaTagDescription, skuAndContextResponse.ImageUrl, "", "", "", "", "", "0.00", "0.00", "0", "Material", "Color", "", "" };
                                     arrayToWrite[index] = new string[headerIndexDictionary.Count];
                                     arrayToWrite[index][headerIndexDictionary["productid"]] = productId;
                                     arrayToWrite[index][headerIndexDictionary["skuid"]] = productSkusResponse.Id;
@@ -1613,17 +1408,11 @@ namespace SheetsCatalogImport.Services
                                     arrayToWrite[index][headerIndexDictionary["search keywords"]] = skuAndContextResponse.KeyWords;
                                     arrayToWrite[index][headerIndexDictionary["metatag description"]] = getProductByIdResponse.Description;
                                     arrayToWrite[index][headerIndexDictionary["image url 1"]] = skuAndContextResponse.ImageUrl;
-                                    //arrayToWrite[index][headerIndexDictionary["image url 2"]] = skuAndContextResponse.ImageUrl;
-                                    //arrayToWrite[index][headerIndexDictionary["image url 3"]] = skuAndContextResponse.ImageUrl;
-                                    //arrayToWrite[index][headerIndexDictionary["image url 4"]] = skuAndContextResponse.ImageUrl;
-                                    //arrayToWrite[index][headerIndexDictionary["image url 5"]] = skuAndContextResponse.ImageUrl;
                                     arrayToWrite[index][headerIndexDictionary["display if out of stock"]] = getProductByIdResponse.ShowWithoutStock.ToString().ToUpper();
                                     arrayToWrite[index][headerIndexDictionary["msrp"]] = getPriceResponse != null ? getPriceResponse.CostPrice.ToString() : string.Empty;
                                     arrayToWrite[index][headerIndexDictionary["selling price (price to gpp)"]] = getPriceResponse != null ? getPriceResponse.BasePrice.ToString() : string.Empty;
-                                    //arrayToWrite[index][headerIndexDictionary["available quantity"]] = 
                                     arrayToWrite[index][headerIndexDictionary["productspecs"]] = prodSpecs.ToString();
                                     arrayToWrite[index][headerIndexDictionary["sku specs"]] = skuSpecs.ToString();
-                                    //productId, skuId.ToString(), categoryIds[categoryId], brandName, getProductByIdResponse.Name, getProductByIdResponse.RefId, skuAndContextResponse.NameComplete, "EAN", "SKU REF", skuAndContextResponse.Dimension.Height.ToString(), skuAndContextResponse.Dimension.Width.ToString(), skuAndContextResponse.Dimension.Length.ToString(), skuAndContextResponse.Dimension.Weight.ToString(), getProductByIdResponse.Description, "SEARCH KEYWORDS", getProductByIdResponse.MetaTagDescription, skuAndContextResponse.ImageUrl, "", "", "", "", "", "0.00", "0.00", "0", "Material", "Color", "", "" 
 
 
                                     index++;
@@ -1635,7 +1424,7 @@ namespace SheetsCatalogImport.Services
                                             Values = arrayToWrite
                                         };
 
-                                        var writeToSheetResult = await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
+                                        await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
                                         offset += writeBlockSize;
                                         arrayToWrite = new string[writeBlockSize + 1][];
                                         index = 0;
@@ -1650,7 +1439,7 @@ namespace SheetsCatalogImport.Services
                             Values = arrayToWrite
                         };
 
-                        var writeToSheetResultRemaining = await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWriteRemaining);
+                        await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWriteRemaining);
                     }
                 }
             }
@@ -1665,7 +1454,7 @@ namespace SheetsCatalogImport.Services
             {
                 string[] nameArr = categoryName.Split('/');
                 string currentLevelCategoryName = nameArr[0];
-                GetCategoryTreeResponse currentLevelCategoryTree = categoryTree.Where(t => t.Name.Equals(currentLevelCategoryName)).FirstOrDefault();
+                GetCategoryTreeResponse currentLevelCategoryTree = categoryTree.FirstOrDefault(t => t.Name.Equals(currentLevelCategoryName));
                 if (currentLevelCategoryTree != null)
                 {
                     if (nameArr.Length == 0)
@@ -1708,48 +1497,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/product
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("CreateProduct", null, $"{jsonSerializedData} [{statusCode}] {responseContent}");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProduct", null, $"Error creating product {createProductRequest.Title}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1758,47 +1512,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProduct(string productId, ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProduct", null, $"Error updating product {updateProductRequest.Title}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1807,47 +1527,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createSkuRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateSku", null, $"Error creating sku {createSkuRequest.Name}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1856,47 +1542,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateSku(string skuId, SkuRequest updateSkuRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateSkuRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateSku", null, $"Error updating sku {updateSkuRequest.Name}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateSkuRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -1905,51 +1557,21 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/category/tree/categoryLevels
-
             GetCategoryTreeResponse[] getCategoryTreeResponse = null;
-
-            try
+            if (string.IsNullOrEmpty(accountName))
             {
-                if (string.IsNullOrEmpty(accountName))
-                {
-                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                }
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    //RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pub/category/tree/{categoryLevels}")
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}")
-
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                //Console.WriteLine($"GetCategoryTree {accountName} [{response.StatusCode}] '{responseContent}'");
-                //_context.Vtex.Logger.Debug("GetCategoryTree", null, $"{responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetCategoryTree", null, $"Could not get category tree '{categoryLevels}' [{response.StatusCode}]");
-                }
+                accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
-            catch (Exception ex)
+
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalog_system/pub/category/tree/{categoryLevels}?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                _context.Vtex.Logger.Error("GetCategoryTree", null, $"Error getting category tree '{categoryLevels}'", ex);
+                getCategoryTreeResponse = JsonConvert.DeserializeObject<GetCategoryTreeResponse[]>(response.ResponseText);
+            }
+            else
+            {
+                _context.Vtex.Logger.Warn("GetCategoryTree", null, $"Could not get category tree '{categoryLevels}' [{response.StatusCode}]");
             }
 
             return getCategoryTreeResponse;
@@ -1958,41 +1580,12 @@ namespace SheetsCatalogImport.Services
         public async Task<CategoryResponse> CreateCategory(CategoryRequest createCategoryRequest)
         {
             // POST https://{accountName}.{environment}.com.br/api/catalog/pvt/category
-
-            string responseContent = string.Empty;
             CategoryResponse createCategoryResponse = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryRequest);
+            if (response.IsSuccess)
             {
-                string jsonSerializedData = JsonConvert.SerializeObject(createCategoryRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/category"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    createCategoryResponse = JsonConvert.DeserializeObject<CategoryResponse>(responseContent);
-                }
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateCategory", null, $"Error creating category {createCategoryRequest.Title}", ex);
+                createCategoryResponse = JsonConvert.DeserializeObject<CategoryResponse>(response.ResponseText);
             }
 
             return createCategoryResponse;
@@ -2001,49 +1594,21 @@ namespace SheetsCatalogImport.Services
         public async Task<GetBrandListResponse[]> GetBrandList(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/brand/list
-
             GetBrandListResponse[] getBrandListResponse = null;
-
-            try
+            if (string.IsNullOrEmpty(accountName))
             {
-                if(string.IsNullOrEmpty(accountName))
-                {
-                    accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                }
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    //RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/brand/list")
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetBrandList [{response.StatusCode}] {accountName}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetBrandList", null, $"Could not get brand list [{response.StatusCode}]");
-                }
+                accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
-            catch (Exception ex)
+
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                _context.Vtex.Logger.Error("GetBrandList", null, $"Error getting brand list", ex);
+                getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListResponse[]>(response.ResponseText);
+            }
+            else
+            {
+                _context.Vtex.Logger.Warn("GetBrandList", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
             }
 
             return getBrandListResponse;
@@ -2053,48 +1618,16 @@ namespace SheetsCatalogImport.Services
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
             // portal.vtexcommercestable.com.br/api/whatever?an={accountName}
-
             GetBrandListV2Response getBrandListResponse = null;
-
-            try
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    //RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/brands")
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-                else
-                {
-                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetBrandListV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
-                }
+                getBrandListResponse = JsonConvert.DeserializeObject<GetBrandListV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetBrandListV2", null, $"Error getting brand list '{accountName}'", ex);
+                _context.Vtex.Logger.Warn("GetBrandListV2", null, $"Could not get brand list '{accountName}' [{response.StatusCode}]");
             }
 
             return getBrandListResponse;
@@ -2109,48 +1642,16 @@ namespace SheetsCatalogImport.Services
                 IsActive = true
             };
 
-            try
+            string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createBrandV2Request);
+            if (response.IsSuccess)
             {
-                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                string jsonSerializedData = JsonConvert.SerializeObject(createBrandV2Request);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/brands?an={accountName}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-                else
-                {
-                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"CreateBrandV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    createBrandV2Response = JsonConvert.DeserializeObject<CreateBrandV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("CreateBrandV2", null, $"Could not create brand '{brandName}' [{response.StatusCode}]");
-                }
+                createBrandV2Response = JsonConvert.DeserializeObject<CreateBrandV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("CreateBrandV2", null, $"Error creating brand '{brandName}'", ex);
+                _context.Vtex.Logger.Warn("CreateBrandV2", null, $"Could not create brand '{brandName}' [{response.StatusCode}]");
             }
 
             return createBrandV2Response;
@@ -2159,45 +1660,18 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryListV2Response> GetCategoryListV2(string accountName)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/brands
-
             GetCategoryListV2Response getCategoryList = null;
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    //RequestUri = new Uri($"http://{accountName}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/category-tree")
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree?an={accountName}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetCategoryListV2 {accountName}: {response.StatusCode}");
-                if (response.IsSuccessStatusCode)
-                {
-                    getCategoryList = JsonConvert.DeserializeObject<GetCategoryListV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list '{accountName}' [{response.StatusCode}]");
-                }
+                getCategoryList = JsonConvert.DeserializeObject<GetCategoryListV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"GetCategoryListV2 Error getting category list '{accountName}'");
-                _context.Vtex.Logger.Error("GetCategoryListV2", null, $"Error getting category list '{accountName}'", ex);
+                _context.Vtex.Logger.Warn("GetCategoryListV2", null, $"Could not get category list '{accountName}' [{response.StatusCode}]");
             }
 
             return getCategoryList;
@@ -2211,48 +1685,17 @@ namespace SheetsCatalogImport.Services
                 Name = categoryName
             };
 
-            try
+            string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryV2Request);
+
+            if (response.IsSuccess)
             {
-                string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
-                string jsonSerializedData = JsonConvert.SerializeObject(createCategoryV2Request);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                //string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                string authToken = _context.Vtex.AdminUserAuthToken;
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-                else
-                {
-                    Console.WriteLine(" -------------- NULL TOKEN ------------ ");
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"CreateCategoryV2 {accountName} {response.StatusCode} {responseContent}");
-                if (response.IsSuccessStatusCode)
-                {
-                    createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("CreateCategoryV2", null, $"Could not create brand '{categoryName}' [{response.StatusCode}]");
-                }
+                createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("CreateCategoryV2", null, $"Error creating brand '{categoryName}'", ex);
+                _context.Vtex.Logger.Warn("CreateCategoryV2", null, $"Could not create brand '{categoryName}' [{response.StatusCode}]");
             }
 
             return createCategoryV2Response;
@@ -2261,84 +1704,35 @@ namespace SheetsCatalogImport.Services
         public async Task<GetProductByIdResponse> GetProductById(string productId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/product/productId
-
             GetProductByIdResponse getProductByIdResponse = null;
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getProductByIdResponse = JsonConvert.DeserializeObject<GetProductByIdResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductById", null, $"Could not get product for id '{productId}' [{response.StatusCode}]");
-                }
+                getProductByIdResponse = JsonConvert.DeserializeObject<GetProductByIdResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductById", null, $"Error getting product for id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductById", null, $"Could not get product for id '{productId}' [{response.StatusCode}]");
             }
 
             return getProductByIdResponse;
         }
 
-        public async Task<long[]> ListSkuIds(int page = 1, int pagesize = 1000)
+        public async Task<long[]> ListSkuIds(int page, int pagesize)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids
-
             long[] listSkuIdsResponse = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize={pagesize}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    listSkuIdsResponse = JsonConvert.DeserializeObject<long[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ListSkuIds", null, $"Could not get sku ids {page}/{pagesize} [{response.StatusCode}]");
-                }
+                listSkuIdsResponse = JsonConvert.DeserializeObject<long[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ListSkuIds", null, $"Error getting sku ids {page}/{pagesize}", ex);
+                _context.Vtex.Logger.Warn("ListSkuIds", null, $"Could not get sku ids {page}/{pagesize} [{response.StatusCode}]");
             }
 
             return listSkuIdsResponse;
@@ -2347,7 +1741,6 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateSkuFile(string skuId, string imageName, string imageText, bool isMain, string imageUrl)
         {
             //POST https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/file
-
             bool success = false;
             string responseContent = string.Empty;
             string statusCode = string.Empty;
@@ -2369,34 +1762,16 @@ namespace SheetsCatalogImport.Services
                         Url = imageUrl
                     };
 
-                    string jsonSerializedData = JsonConvert.SerializeObject(imageUpdate);
-
-                    var request = new HttpRequestMessage
-                    {
-                        Method = HttpMethod.Post,
-                        RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file"),
-                        Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                    };
-
-                    //request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                    string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                    if (authToken != null)
-                    {
-                        request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                        request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                        request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                    }
-
-                    var client = _clientFactory.CreateClient();
-                    var response = await client.SendAsync(request);
-                    responseContent = await response.Content.ReadAsStringAsync();
-                    success = response.IsSuccessStatusCode;
+                    string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+                    ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, imageUpdate);
+                    responseContent = response.ResponseText;
+                    success = response.IsSuccess;
                     if (!success)
                     {
-                        _context.Vtex.Logger.Info("UpdateSkuImage", null, $"Response: {responseContent}  [{response.StatusCode}] for request '{jsonSerializedData}' to {request.RequestUri}");
+                        _context.Vtex.Logger.Info("UpdateSkuImage", null, $"Response: {responseContent}  [{response.StatusCode}] for request '{JsonConvert.SerializeObject(imageUpdate)}' to {url}");
                     }
 
-                    statusCode = response.StatusCode.ToString();
+                    statusCode = response.StatusCode;
                     if (string.IsNullOrEmpty(responseContent))
                     {
                         responseContent = $"Updated:{success} {response.StatusCode}";
@@ -2428,44 +1803,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateEANGTIN(string skuId, string ean)
         {
             // POST https://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean/ean
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateEANGTIN", null, $"Error creating EAN/GTIN {ean} for Sku {skuId}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean/{ean}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2474,47 +1818,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreatePrice(string skuId, CreatePrice createPrice)
         {
             // PUT https://api.vtex.com/accountName/pricing/prices/skuId
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createPrice);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreatePrice", null, $"Error creating Price for Sku {skuId}", ex);
-            }
-
+            string url = $"https://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, createPrice);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2523,41 +1833,18 @@ namespace SheetsCatalogImport.Services
         public async Task<GetWarehousesResponse[]> GetWarehouses()
         {
             // GET https://logistics.environment.com.br/api/logistics/pvt/configuration/warehouses?an=accountName
-
             GetWarehousesResponse[] getWarehousesResponse = null;
+            string url = $"https://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/configuration/warehouses?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetWarehouses", null, $"Could not get warehouses' [{response.StatusCode}]");
-                }
+                getWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetWarehouses", null, $"Error getting warehouses", ex);
+                _context.Vtex.Logger.Warn("GetWarehouses", null, $"Could not get warehouses' [{response.StatusCode}]");
             }
 
             return getWarehousesResponse;
@@ -2566,27 +1853,11 @@ namespace SheetsCatalogImport.Services
         public async Task<GetWarehousesResponse[]> ListAllWarehouses()
         {
             GetWarehousesResponse[] listAllWarehousesResponse = null;
-            var request = new HttpRequestMessage
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/logistics/pvt/configuration/warehouses")
-            };
-
-            request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-            if (authToken != null)
-            {
-                request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-            }
-
-            var client = _clientFactory.CreateClient();
-            var response = await client.SendAsync(request);
-            string responseContent = await response.Content.ReadAsStringAsync();
-            if (response.IsSuccessStatusCode)
-            {
-                listAllWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(responseContent);
+                listAllWarehousesResponse = JsonConvert.DeserializeObject<GetWarehousesResponse[]>(response.ResponseText);
             }
 
             return listAllWarehousesResponse;
@@ -2595,47 +1866,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> SetInventory(string skuId, string warehouseId, InventoryRequest inventoryRequest)
         {
             // PUT https://logistics.vtexcommercestable.com.br/api/logistics/pvt/inventory/skus/skuId/warehouses/warehouseId?an=accountName
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(inventoryRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetInventory", null, $"Error setting inventory for sku {skuId} in warehouse {warehouseId}", ex);
-            }
-
+            string url = $"https://logistics.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/logistics/pvt/inventory/skus/{skuId}/warehouses/{warehouseId}?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, inventoryRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2643,48 +1880,14 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> SetProdSpecs(string productId, SpecAttr prodSpec)
         {
-            // PUT http://accountName.environment.com.br/api/catalog/pvt/product/productId/specificationvalue
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(prodSpec);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetProdSpecs", null, $"Error setting product specs for prodId {productId}", ex);
-            }
-
+            // PUT https://accountName.environment.com.br/api/catalog/pvt/product/productId/specificationvalue
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/product/{productId}/specificationvalue";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, prodSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2692,47 +1895,14 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> SetSkuSpec(string skuId, SpecAttr skuSpec)
         {
-            // PUT http://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/SkuId/specificationvalue
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(skuSpec);
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("SetSkuSpec", null, $"Error setting product specs for sku {skuId}", ex);
-            }
-
+            // PUT https://accountName.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/SkuId/specificationvalue
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specificationvalue";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, skuSpec);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -2741,41 +1911,17 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductAndSkuIdsResponse> GetProductAndSkuIds(long categoryId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds
-
             ProductAndSkuIdsResponse productAndSkuIdsResponse = new ProductAndSkuIdsResponse();
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/products/GetProductAndSkuIds?categoryId={categoryId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productAndSkuIdsResponse = JsonConvert.DeserializeObject<ProductAndSkuIdsResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductAndSkuIds", null, $"Could not get products and skus for category '{categoryId}' [{response.StatusCode}]");
-                }
+                productAndSkuIdsResponse = JsonConvert.DeserializeObject<ProductAndSkuIdsResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductAndSkuIds", null, $"Error getting products and skus for category '{categoryId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductAndSkuIds", null, $"Could not get products and skus for category '{categoryId}' [{response.StatusCode}]");
             }
 
             return productAndSkuIdsResponse;
@@ -2784,41 +1930,17 @@ namespace SheetsCatalogImport.Services
         public async Task<SkuAndContextResponse> GetSkuAndContext(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/skuId
-
             SkuAndContextResponse skuAndContextResponse = new SkuAndContextResponse();
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    skuAndContextResponse = JsonConvert.DeserializeObject<SkuAndContextResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuAndContext", null, $"Could not get sku '{skuId}' [{response.StatusCode}]");
-                }
+                skuAndContextResponse = JsonConvert.DeserializeObject<SkuAndContextResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuAndContext", null, $"Error getting sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuAndContext", null, $"Could not get sku '{skuId}' [{response.StatusCode}]");
             }
 
             return skuAndContextResponse;
@@ -2827,41 +1949,17 @@ namespace SheetsCatalogImport.Services
         public async Task<string[]> GetEansBySkuId(long skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/ean
-
             string[] eans = null;
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/ean")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    eans = JsonConvert.DeserializeObject<string[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetEanBySkuId", null, $"Could not get EAN for sku '{skuId}' [{response.StatusCode}]");
-                }
+                eans = JsonConvert.DeserializeObject<string[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetEanBySkuId", null, $"Error getting EAN for sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetEanBySkuId", null, $"Could not get EAN for sku '{skuId}' [{response.StatusCode}]");
             }
 
             return eans;
@@ -2870,41 +1968,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductSearchResponse[]> ProductSearch(string search)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pub/products/search/search
-
             ProductSearchResponse[] productSearchResponse = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalog_system/pub/products/search/{search}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSearchResponse = JsonConvert.DeserializeObject<ProductSearchResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ProductSearch", null, $"Could not search '{search}' [{response.StatusCode}]");
-                }
+                productSearchResponse = JsonConvert.DeserializeObject<ProductSearchResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ProductSearch", null, $"Error searching '{search}'", ex);
+                _context.Vtex.Logger.Warn("ProductSearch", null, $"Could not search '{search}' [{response.StatusCode}]");
             }
 
             return productSearchResponse;
@@ -2913,41 +1986,16 @@ namespace SheetsCatalogImport.Services
         public async Task<List<ProductSkusResponse>> GetSkusFromProductId(string productId)
         {
             // GET https://{{accountName}}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{{productId}}
-
             List<ProductSkusResponse> productSkusResponses = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/sku/stockkeepingunitByProductId/{productId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSkusResponses = JsonConvert.DeserializeObject<List<ProductSkusResponse>>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkusFromProductId", null, $"Could not get skus for product id '{productId}'  [{response.StatusCode}]");
-                }
+                productSkusResponses = JsonConvert.DeserializeObject<List<ProductSkusResponse>>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkusFromProductId", null, $"Error getting skus for product id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkusFromProductId", null, $"Could not get skus for product id '{productId}'  [{response.StatusCode}]");
             }
 
             return productSkusResponses;
@@ -2956,45 +2004,14 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> ExtraInfo(ExtraInfo extraInfo)
         {
             // PUT https://accountName.vtexcommercestable.com.br/api/catalogv2/products/{productId}/extra-info
-
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
             string productId = extraInfo.ProductId;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("ExtraInfo", null, $"Error setting ExtraInfo for Product Id '{productId}'", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}/extra-info";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, extraInfo);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -3002,43 +2019,13 @@ namespace SheetsCatalogImport.Services
 
         public async Task<UpdateResponse> CreateProductToTradePolicy(string productId, string tradepolicyId)
         {
-            bool success = false;
-            string responseContent = string.Empty;
-            string statusCode = string.Empty;
-
-            try
-            {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}"),
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProductToTradePolicy", null, $"Error creating Trade Policy {tradepolicyId} for Product Id '{productId}'", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/product/{productId}/salespolicy/{tradepolicyId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -3056,10 +2043,7 @@ namespace SheetsCatalogImport.Services
                 return ($"Import started {importStarted} in progress.");
             }
 
-            StringBuilder sb = new StringBuilder();
-
             string importFolderId = null;
-            string accountFolderId = null;
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
 
             FolderIds folderIds = await _sheetsCatalogImportRepository.LoadFolderIds(accountName);
@@ -3089,41 +2073,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ListFilesResponse> ListImageFiles()
         {
             // GET https://{{accountName}}.myvtex.com/google-drive-import/list-images
-
             ListFilesResponse listFilesResponse = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.myvtex.com/google-drive-import/list-images")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    listFilesResponse = JsonConvert.DeserializeObject<ListFilesResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("ListImageFiles", null, $"Could not get image file list  [{response.StatusCode}]");
-                }
+                listFilesResponse = JsonConvert.DeserializeObject<ListFilesResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("ListImageFiles", null, $"Error getting image file list", ex);
+                _context.Vtex.Logger.Warn("ListImageFiles", null, $"Could not get image file list  [{response.StatusCode}]");
             }
 
             return listFilesResponse;
@@ -3133,7 +2092,6 @@ namespace SheetsCatalogImport.Services
         {
             string response = string.Empty;
             string importFolderId = null;
-            string accountFolderId = null;
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
 
             FolderIds folderIds = await _sheetsCatalogImportRepository.LoadFolderIds(accountName);
@@ -3165,7 +2123,7 @@ namespace SheetsCatalogImport.Services
                             Values = filesToWrite
                         };
 
-                        var writeToSheetResult = await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
+                        await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
                     }
                 }
             }
@@ -3176,41 +2134,17 @@ namespace SheetsCatalogImport.Services
         public async Task<GetSkuImagesResponse[]> GetSkuImages(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/file
-
             GetSkuImagesResponse[] getSkuResponse = null;
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
 
-            try
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/file")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getSkuResponse = JsonConvert.DeserializeObject<GetSkuImagesResponse[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuImages", null, $"Did not get images for skuid '{skuId}'");
-                }
+                getSkuResponse = JsonConvert.DeserializeObject<GetSkuImagesResponse[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuImages", null, $"Error getting images for skuid '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuImages", null, $"Did not get images for skuid '{skuId}'");
             }
 
             return getSkuResponse;
@@ -3219,41 +2153,16 @@ namespace SheetsCatalogImport.Services
         public async Task<GetPriceResponse> GetPrice(string skuId)
         {
             // GET https://api.vtex.com/{accountName}/pricing/prices/itemId
-
             GetPriceResponse getPriceResponse = null;
-
-            try
+            string url = $"https://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://api.vtex.com/{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}/pricing/prices/{skuId}")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    getPriceResponse = JsonConvert.DeserializeObject<GetPriceResponse>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetPrice", null, $"Could not get prices for sku '{skuId}' [{response.StatusCode}]");
-                }
+                getPriceResponse = JsonConvert.DeserializeObject<GetPriceResponse>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetPrice", null, $"Error getting prices for sku '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetPrice", null, $"Could not get prices for sku '{skuId}' [{response.StatusCode}]");
             }
 
             return getPriceResponse;
@@ -3262,41 +2171,16 @@ namespace SheetsCatalogImport.Services
         public async Task<ProductSpecification[]> GetProductSpecifications(string productId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog_system/pvt/products/productId/specification
-
             ProductSpecification[] productSpecifications = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog_system/pvt/products/{productId}/specification")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSpecifications = JsonConvert.DeserializeObject<ProductSpecification[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetProductSpecifications", null, $"Could not get product specifications for product id '{productId}' [{response.StatusCode}]");
-                }
+                productSpecifications = JsonConvert.DeserializeObject<ProductSpecification[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductSpecifications", null, $"Error getting product specifications for product id '{productId}'", ex);
+                _context.Vtex.Logger.Warn("GetProductSpecifications", null, $"Could not get product specifications for product id '{productId}' [{response.StatusCode}]");
             }
 
             return productSpecifications;
@@ -3305,41 +2189,16 @@ namespace SheetsCatalogImport.Services
         public async Task<SkuSpecification[]> GetSkuSpecifications(string skuId)
         {
             // GET https://{accountName}.{environment}.com.br/api/catalog/pvt/stockkeepingunit/skuId/specification
-
             SkuSpecification[] productSpecifications = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalog/pvt/stockkeepingunit/{skuId}/specification")
-                };
-
-                request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productSpecifications = JsonConvert.DeserializeObject<SkuSpecification[]>(responseContent);
-                }
-                else
-                {
-                    _context.Vtex.Logger.Warn("GetSkuSpecifications", null, $"Could not get sku specifications for sku id '{skuId}' [{response.StatusCode}]");
-                }
+                productSpecifications = JsonConvert.DeserializeObject<SkuSpecification[]>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetSkuSpecifications", null, $"Error getting sku specifications for sku id '{skuId}'", ex);
+                _context.Vtex.Logger.Warn("GetSkuSpecifications", null, $"Could not get sku specifications for sku id '{skuId}' [{response.StatusCode}]");
             }
 
             return productSpecifications;
@@ -3348,49 +2207,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> CreateProductV2(ProductRequestV2 createProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(createProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    //RequestUri = new Uri($"http://{SheetsCatalogImportConstants.ENV_CATALOG}/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}"),
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("CreateProductV2", null, $"Request: '{jsonSerializedData}' \nResponse: [{statusCode}] '{responseContent}'");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("CreateProductV2", null, $"Error creating product {createProductRequest.Name}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -3399,49 +2222,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequestV2 updateProductRequest)
         {
             // POST https://{{environment-catalog}}/api/catalogv2/products?an=
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    //RequestUri = new Uri($"http://{SheetsCatalogImportConstants.ENV_CATALOG}/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}"),
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-                _context.Vtex.Logger.Debug("UpdateProductV2", null, $"Request: '{jsonSerializedData}' \nResponse: [{statusCode}] '{responseContent}'");
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProductV2", null, $"Error updating product {updateProductRequest.Name}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.vtexcommercestable.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -3450,47 +2237,13 @@ namespace SheetsCatalogImport.Services
         public async Task<UpdateResponse> UpdateProductV2(ProductRequest updateProductRequest)
         {
             // PUT https://{accountName}.{environment}.com.br/api/catalogv2/products
-
-            string responseContent = string.Empty;
-            bool success = false;
-            string statusCode = string.Empty;
-
-            try
-            {
-                string jsonSerializedData = JsonConvert.SerializeObject(updateProductRequest);
-
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Put,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products"),
-                    Content = new StringContent(jsonSerializedData, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON)
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-
-                success = response.IsSuccessStatusCode;
-                statusCode = response.StatusCode.ToString();
-                responseContent = await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                _context.Vtex.Logger.Error("UpdateProduct", null, $"Error updating product {updateProductRequest.Title}", ex);
-            }
-
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Put, url, updateProductRequest);
             UpdateResponse updateResponse = new UpdateResponse
             {
-                Success = success,
-                Message = responseContent,
-                StatusCode = statusCode
+                Success = response.IsSuccess,
+                Message = response.ResponseText,
+                StatusCode = response.StatusCode
             };
 
             return updateResponse;
@@ -3498,42 +2251,35 @@ namespace SheetsCatalogImport.Services
 
         public async Task<ProductResponseV2> GetProductV2(string productId)
         {
-            Console.WriteLine($"GetProductV2 '{productId}'");
             // GET https://{accountName}.{environment}.com.br/api/catalogv2/products/{productId}
             ProductResponseV2 productResponseV2 = null;
-
-            try
+            string url = $"https://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
             {
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri($"http://{this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}.{SheetsCatalogImportConstants.ENVIRONMENT}.com.br/api/catalogv2/products/{productId}")
-                };
-
-                string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
-                if (authToken != null)
-                {
-                    request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
-                    request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
-                }
-
-                var client = _clientFactory.CreateClient();
-                var response = await client.SendAsync(request);
-                string responseContent = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(responseContent);
-                }
-                else
-                {
-                    Console.WriteLine($"GetProductV2 [{response.StatusCode}] {responseContent}");
-                    _context.Vtex.Logger.Warn("GetProductV2", null, $"Could not get product {productId}.\n[{response.StatusCode}] {responseContent}");
-                }
+                productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(response.ResponseText);
             }
-            catch (Exception ex)
+            else
             {
-                _context.Vtex.Logger.Error("GetProductV2", null, $"Error getting product {productId}", ex);
+                _context.Vtex.Logger.Warn("GetProductV2", null, $"Could not get product {productId}.\n[{response.StatusCode}] {response.ResponseText}");
+            }
+
+            return productResponseV2;
+        }
+
+        public async Task<ProductResponseV2> GetProductByExternalIdV2(string externalId)
+        {
+            // GET https://portal.vtexcommercestable.com.br/api/catalogv2/products?an=vyskseller2603&externalid=101
+            ProductResponseV2 productResponseV2 = null;
+            string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/products?an={this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME]}&externalid={externalId}";
+            ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
+            if (response.IsSuccess)
+            {
+                productResponseV2 = JsonConvert.DeserializeObject<ProductResponseV2>(response.ResponseText);
+            }
+            else
+            {
+                _context.Vtex.Logger.Warn("GetProductByExternalIdV2", null, $"Could not get product {externalId}.\n[{response.StatusCode}] {response.ResponseText}");
             }
 
             return productResponseV2;
@@ -3557,8 +2303,6 @@ namespace SheetsCatalogImport.Services
                 sheetId = spreadsheets.Files.Select(s => s.Id).FirstOrDefault();
                 string sheetContent = await _googleSheetsService.GetSheet(sheetId, string.Empty);
                 GoogleSheet googleSheet = JsonConvert.DeserializeObject<GoogleSheet>(sheetContent);
-                string valueRange = googleSheet.ValueRanges[0].Range;
-                string sheetName = valueRange.Split("!")[0];
                 string[] sheetHeader = googleSheet.ValueRanges[0].Values[0];
                 int headerIndex = 0;
                 Dictionary<string, int> headerIndexDictionary = new Dictionary<string, int>();
@@ -3652,7 +2396,7 @@ namespace SheetsCatalogImport.Services
                     Values = arrayToWrite
                 };
 
-                UpdateValuesResponse writeToSheetResult = await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
+                await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
 
                 BatchUpdate batchUpdate = new BatchUpdate
                 {
@@ -3722,7 +2466,6 @@ namespace SheetsCatalogImport.Services
                 };
 
                 success = await _googleSheetsService.BatchUpdate(sheetId, batchUpdate);
-                //_context.Vtex.Logger.Debug("SetBrandList", null, $"Set Brands and Categories [{success}] {JsonConvert.SerializeObject(batchUpdate)}");
             }
             else
             {
@@ -3865,7 +2608,7 @@ namespace SheetsCatalogImport.Services
                 {
                     if (update)
                     {
-                        existingProduct.Skus.Remove(existingProduct.Skus.Where(s => s.Id.Equals(skus.Id)).FirstOrDefault());
+                        existingProduct.Skus.Remove(existingProduct.Skus.FirstOrDefault(s => s.Id.Equals(skus.Id)));
                         existingProduct.Skus.Add(skus);
                     }
                     else
@@ -3882,268 +2625,68 @@ namespace SheetsCatalogImport.Services
             return existingProduct;
         }
 
-        private async Task<bool> NextLineIsSameProduct(Dictionary<string, int> headerIndexDictionary, string[][] values, int index)
+        private async Task<ResponseWrapper> SendRequest(HttpMethod httpMethod, string url, object requestObject = null)
         {
-            bool isSame = false;
+            ResponseWrapper responseWrapper = null;
+            string jsonSerializedRequest = string.Empty;
 
-            string[] dataValues = values[index];
-            string productid = null;
-            string category = null;
-            string brand = null;
-            string productName = null;
-            string productReferenceCode = null;
-            string productDescription = null;
-            string searchKeywords = null;
-            string metaTagDescription = null;
-            string imageUrl1 = null;
-            string imageUrl2 = null;
-            string imageUrl3 = null;
-            string imageUrl4 = null;
-            string imageUrl5 = null;
-            string productSpecs = null;
-            string productSpecGroup = null;
-            string productSpecField = null;
-            string productSpecValue = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValues.Count())
-                productid = dataValues[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValues.Count())
-                category = dataValues[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValues.Count())
-                brand = dataValues[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValues.Count())
-                productName = dataValues[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValues.Count())
-                productReferenceCode = dataValues[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValues.Count())
-                productDescription = dataValues[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValues.Count())
-                searchKeywords = dataValues[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValues.Count())
-                metaTagDescription = dataValues[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValues.Count())
-                imageUrl1 = dataValues[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValues.Count())
-                imageUrl2 = dataValues[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValues.Count())
-                imageUrl3 = dataValues[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValues.Count())
-                imageUrl4 = dataValues[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValues.Count())
-                imageUrl5 = dataValues[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValues.Count())
-                productSpecs = dataValues[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValues.Count())
-                productSpecGroup = dataValues[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValues.Count())
-                productSpecField = dataValues[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValues.Count())
-                productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
+            var request = new HttpRequestMessage
+            {
+                Method = httpMethod,
+                RequestUri = new Uri(url)
+            };
 
-            string[] dataValuesNext = values[index+1];
-            string productidNext = null;
-            string categoryNext = null;
-            string brandNext = null;
-            string productNameNext = null;
-            string productReferenceCodeNext = null;
-            string productDescriptionNext = null;
-            string searchKeywordsNext = null;
-            string metaTagDescriptionNext = null;
-            string imageUrl1Next = null;
-            string imageUrl2Next = null;
-            string imageUrl3Next = null;
-            string imageUrl4Next = null;
-            string imageUrl5Next = null;
-            string productSpecsNext = null;
-            string productSpecGroupNext = null;
-            string productSpecFieldNext = null;
-            string productSpecValueNext = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValuesNext.Count())
-                productidNext = dataValuesNext[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValuesNext.Count())
-                categoryNext = dataValuesNext[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValuesNext.Count())
-                brandNext = dataValuesNext[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValuesNext.Count())
-                productNameNext = dataValuesNext[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValuesNext.Count())
-                productReferenceCodeNext = dataValuesNext[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValuesNext.Count())
-                productDescriptionNext = dataValuesNext[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValuesNext.Count())
-                searchKeywordsNext = dataValuesNext[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValuesNext.Count())
-                metaTagDescriptionNext = dataValuesNext[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValuesNext.Count())
-                imageUrl1Next = dataValuesNext[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValuesNext.Count())
-                imageUrl2Next = dataValuesNext[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValuesNext.Count())
-                imageUrl3Next = dataValuesNext[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValuesNext.Count())
-                imageUrl4Next = dataValuesNext[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValuesNext.Count())
-                imageUrl5Next = dataValuesNext[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValuesNext.Count())
-                productSpecsNext = dataValuesNext[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValuesNext.Count())
-                productSpecGroupNext = dataValuesNext[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValuesNext.Count())
-                productSpecFieldNext = dataValuesNext[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValuesNext.Count())
-                productSpecValueNext = dataValuesNext[headerIndexDictionary["product spec value"]];
+            if (requestObject != null)
+            {
+                try
+                {
+                    jsonSerializedRequest = JsonConvert.SerializeObject(requestObject);
+                    request.Content = new StringContent(jsonSerializedRequest, Encoding.UTF8, SheetsCatalogImportConstants.APPLICATION_JSON);
+                }
+                catch (Exception ex)
+                {
+                    _context.Vtex.Logger.Error("SendRequest", null, $"Error Serializing Request Object", ex);
+                }
+            }
 
-            isSame =
-                productid.Equals(productidNext) &&
-                category.Equals(categoryNext) &&
-                brand.Equals(brandNext) &&
-                productName.Equals(productNameNext) &&
-                productReferenceCode.Equals(productReferenceCodeNext) &&
-                productDescription.Equals(productDescriptionNext) &&
-                searchKeywords.Equals(searchKeywordsNext) &&
-                metaTagDescription.Equals(metaTagDescriptionNext) &&
-                imageUrl1.Equals(imageUrl1Next) &&
-                imageUrl2.Equals(imageUrl2Next) &&
-                imageUrl3.Equals(imageUrl3Next) &&
-                imageUrl4.Equals(imageUrl4Next) &&
-                imageUrl5.Equals(imageUrl5Next) &&
-                productSpecs.Equals(productSpecsNext) &&
-                productSpecGroup.Equals(productSpecGroupNext) &&
-                productSpecField.Equals(productSpecFieldNext) &&
-                productSpecValue.Equals(productSpecValueNext);
+            request.Headers.Add(SheetsCatalogImportConstants.USE_HTTPS_HEADER_NAME, "true");
+            string authToken = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.HEADER_VTEX_CREDENTIAL];
+            if (authToken != null)
+            {
+                request.Headers.Add(SheetsCatalogImportConstants.AUTHORIZATION_HEADER_NAME, authToken);
+                request.Headers.Add(SheetsCatalogImportConstants.VTEX_ID_HEADER_NAME, authToken);
+                request.Headers.Add(SheetsCatalogImportConstants.PROXY_AUTHORIZATION_HEADER_NAME, authToken);
+            }
 
-            return isSame;
-        }
+            var client = _clientFactory.CreateClient();
 
-        private async Task<bool> PreviousLineIsSameProduct(Dictionary<string, int> headerIndexDictionary, string[][] values, int index)
-        {
-            bool isSame = false;
+            try
+            {
+                HttpResponseMessage responseMessage = await client.SendAsync(request);
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                responseWrapper = new ResponseWrapper
+                {
+                    IsSuccess = responseMessage.IsSuccessStatusCode,
+                    ResponseText = responseContent,
+                    StatusCode = responseMessage.StatusCode.ToString()
+                };
 
-            string[] dataValues = values[index];
-            string productid = null;
-            string category = null;
-            string brand = null;
-            string productName = null;
-            string productReferenceCode = null;
-            string productDescription = null;
-            string searchKeywords = null;
-            string metaTagDescription = null;
-            string imageUrl1 = null;
-            string imageUrl2 = null;
-            string imageUrl3 = null;
-            string imageUrl4 = null;
-            string imageUrl5 = null;
-            string productSpecs = null;
-            string productSpecGroup = null;
-            string productSpecField = null;
-            string productSpecValue = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValues.Count())
-                productid = dataValues[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValues.Count())
-                category = dataValues[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValues.Count())
-                brand = dataValues[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValues.Count())
-                productName = dataValues[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValues.Count())
-                productReferenceCode = dataValues[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValues.Count())
-                productDescription = dataValues[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValues.Count())
-                searchKeywords = dataValues[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValues.Count())
-                metaTagDescription = dataValues[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValues.Count())
-                imageUrl1 = dataValues[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValues.Count())
-                imageUrl2 = dataValues[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValues.Count())
-                imageUrl3 = dataValues[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValues.Count())
-                imageUrl4 = dataValues[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValues.Count())
-                imageUrl5 = dataValues[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValues.Count())
-                productSpecs = dataValues[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValues.Count())
-                productSpecGroup = dataValues[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValues.Count())
-                productSpecField = dataValues[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValues.Count())
-                productSpecValue = dataValues[headerIndexDictionary["product spec value"]];
+                if (!responseWrapper.IsSuccess)
+                {
+                    _context.Vtex.Logger.Warn("SendRequest", null, $"Problem Sending Request. Response: '{responseWrapper.ResponseText}' {jsonSerializedRequest}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.Vtex.Logger.Error("SendRequest", null, $"Error Sending Request to {request.RequestUri} {jsonSerializedRequest}", ex);
+                responseWrapper = new ResponseWrapper
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+            }
 
-            string[] dataValuesPrev = values[index - 1];
-            string productidPrev = null;
-            string categoryPrev = null;
-            string brandPrev = null;
-            string productNamePrev = null;
-            string productReferenceCodePrev = null;
-            string productDescriptionPrev = null;
-            string searchKeywordsPrev = null;
-            string metaTagDescriptionPrev = null;
-            string imageUrl1Prev = null;
-            string imageUrl2Prev = null;
-            string imageUrl3Prev = null;
-            string imageUrl4Prev = null;
-            string imageUrl5Prev = null;
-            string productSpecsPrev = null;
-            string productSpecGroupPrev = null;
-            string productSpecFieldPrev = null;
-            string productSpecValuePrev = null;
-            if (headerIndexDictionary.ContainsKey("productid") && headerIndexDictionary["productid"] < dataValuesPrev.Count())
-                productidPrev = dataValuesPrev[headerIndexDictionary["productid"]];
-            if (headerIndexDictionary.ContainsKey("category") && headerIndexDictionary["category"] < dataValuesPrev.Count())
-                categoryPrev = dataValuesPrev[headerIndexDictionary["category"]];
-            if (headerIndexDictionary.ContainsKey("brand") && headerIndexDictionary["brand"] < dataValuesPrev.Count())
-                brandPrev = dataValuesPrev[headerIndexDictionary["brand"]];
-            if (headerIndexDictionary.ContainsKey("productname") && headerIndexDictionary["productname"] < dataValuesPrev.Count())
-                productNamePrev = dataValuesPrev[headerIndexDictionary["productname"]];
-            if (headerIndexDictionary.ContainsKey("product reference code") && headerIndexDictionary["product reference code"] < dataValuesPrev.Count())
-                productReferenceCodePrev = dataValuesPrev[headerIndexDictionary["product reference code"]];
-            if (headerIndexDictionary.ContainsKey("product description") && headerIndexDictionary["product description"] < dataValuesPrev.Count())
-                productDescriptionPrev = dataValuesPrev[headerIndexDictionary["product description"]];
-            if (headerIndexDictionary.ContainsKey("search keywords") && headerIndexDictionary["search keywords"] < dataValuesPrev.Count())
-                searchKeywordsPrev = dataValuesPrev[headerIndexDictionary["search keywords"]];
-            if (headerIndexDictionary.ContainsKey("metatag description") && headerIndexDictionary["metatag description"] < dataValuesPrev.Count())
-                metaTagDescriptionPrev = dataValuesPrev[headerIndexDictionary["metatag description"]];
-            if (headerIndexDictionary.ContainsKey("image url 1") && headerIndexDictionary["image url 1"] < dataValuesPrev.Count())
-                imageUrl1Prev = dataValuesPrev[headerIndexDictionary["image url 1"]];
-            if (headerIndexDictionary.ContainsKey("image url 2") && headerIndexDictionary["image url 2"] < dataValuesPrev.Count())
-                imageUrl2Prev = dataValuesPrev[headerIndexDictionary["image url 2"]];
-            if (headerIndexDictionary.ContainsKey("image url 3") && headerIndexDictionary["image url 3"] < dataValuesPrev.Count())
-                imageUrl3Prev = dataValuesPrev[headerIndexDictionary["image url 3"]];
-            if (headerIndexDictionary.ContainsKey("image url 4") && headerIndexDictionary["image url 4"] < dataValuesPrev.Count())
-                imageUrl4Prev = dataValuesPrev[headerIndexDictionary["image url 4"]];
-            if (headerIndexDictionary.ContainsKey("image url 5") && headerIndexDictionary["image url 5"] < dataValuesPrev.Count())
-                imageUrl5Prev = dataValuesPrev[headerIndexDictionary["image url 5"]];
-            if (headerIndexDictionary.ContainsKey("productspecs") && headerIndexDictionary["productspecs"] < dataValuesPrev.Count())
-                productSpecsPrev = dataValuesPrev[headerIndexDictionary["productspecs"]];
-            if (headerIndexDictionary.ContainsKey("product spec group") && headerIndexDictionary["product spec group"] < dataValuesPrev.Count())
-                productSpecGroupPrev = dataValuesPrev[headerIndexDictionary["product spec group"]];
-            if (headerIndexDictionary.ContainsKey("product spec field") && headerIndexDictionary["product spec field"] < dataValuesPrev.Count())
-                productSpecFieldPrev = dataValuesPrev[headerIndexDictionary["product spec field"]];
-            if (headerIndexDictionary.ContainsKey("product spec value") && headerIndexDictionary["product spec value"] < dataValuesPrev.Count())
-                productSpecValuePrev = dataValuesPrev[headerIndexDictionary["product spec value"]];
-
-            isSame =
-                productid.Equals(productidPrev) &&
-                category.Equals(categoryPrev) &&
-                brand.Equals(brandPrev) &&
-                productName.Equals(productNamePrev) &&
-                productReferenceCode.Equals(productReferenceCodePrev) &&
-                productDescription.Equals(productDescriptionPrev) &&
-                searchKeywords.Equals(searchKeywordsPrev) &&
-                metaTagDescription.Equals(metaTagDescriptionPrev) &&
-                imageUrl1.Equals(imageUrl1Prev) &&
-                imageUrl2.Equals(imageUrl2Prev) &&
-                imageUrl3.Equals(imageUrl3Prev) &&
-                imageUrl4.Equals(imageUrl4Prev) &&
-                imageUrl5.Equals(imageUrl5Prev) &&
-                productSpecs.Equals(productSpecsPrev) &&
-                productSpecGroup.Equals(productSpecGroupPrev) &&
-                productSpecField.Equals(productSpecFieldPrev) &&
-                productSpecValue.Equals(productSpecValuePrev);
-
-            return isSame;
+            return responseWrapper;
         }
     }
 }

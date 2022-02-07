@@ -3,12 +3,8 @@ using System.Threading.Tasks;
 
 namespace SheetsCatalogImport.Services
 {
-    public interface IVtexAPIService
+    public interface IVtexApiService
     {
-        //Task<string> GetAuthUrl();
-        //Task<bool> RevokeGoogleAuthorizationToken(Token token);
-        //Task<Token> RefreshToken(string refreshToken);
-
         Task<ProcessResult> ProcessSheet();
         Task<UpdateResponse> CreateProduct(ProductRequest createProductRequest);
         Task<UpdateResponse> CreateSku(SkuRequest createSkuRequest);

@@ -8,7 +8,7 @@ namespace SheetsCatalogImport.GraphQL
     [GraphQLMetadata("Mutation")]
     public class Mutation : ObjectGraphType<object>
     {
-        public Mutation(IGoogleSheetsService googleSheetsService, ISheetsCatalogImportRepository sheetsCatalogImportRepository, IVtexAPIService vtexAPIService)
+        public Mutation(IGoogleSheetsService googleSheetsService, ISheetsCatalogImportRepository sheetsCatalogImportRepository, IVtexApiService vtexApiService)
         {
             Name = "Mutation";
 
@@ -41,7 +41,7 @@ namespace SheetsCatalogImport.GraphQL
                 resolve: context =>
                 {
                     var created = googleSheetsService.CreateSheet();
-                    var catalogAndBrand = vtexAPIService.SetBrandList();
+                    vtexApiService.SetBrandList();
                     return created;
                 });
 
@@ -49,15 +49,15 @@ namespace SheetsCatalogImport.GraphQL
                 "processSheet",
                 resolve: context =>
                 {
-                    return vtexAPIService.ProcessSheet();
+                    return vtexApiService.ProcessSheet();
                 });
 
             Field<StringGraphType>(
                 "clearSheet",
                 resolve: context =>
                 {
-                    var cleared = vtexAPIService.ClearSheet();
-                    var catalogAndBrand = vtexAPIService.SetBrandList();
+                    var cleared = vtexApiService.ClearSheet();
+                    var catalogAndBrand = vtexApiService.SetBrandList();
                     return !string.IsNullOrWhiteSpace(cleared.Result) && catalogAndBrand.Result;
                 });
 
@@ -65,7 +65,7 @@ namespace SheetsCatalogImport.GraphQL
                 "addImages",
                 resolve: context =>
                 {
-                    return vtexAPIService.AddImagesToSheet();
+                    return vtexApiService.AddImagesToSheet();
                 });
 
             Field<StringGraphType>(
@@ -76,7 +76,7 @@ namespace SheetsCatalogImport.GraphQL
                 resolve: context =>
                 {
                     string query = context.GetArgument<string>("exportQuery");
-                    return vtexAPIService.ExportToSheet(query);
+                    return vtexApiService.ExportToSheet(query);
                 });
         }
     }

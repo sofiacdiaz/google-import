@@ -1,8 +1,6 @@
 ﻿namespace SheetsCatalogImport.Data
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Text;
@@ -66,7 +64,6 @@
             }
 
             string responseContent = await response.Content.ReadAsStringAsync();
-            //_context.Vtex.Logger.Debug("LoadToken", null, responseContent);
             Token token = JsonConvert.DeserializeObject<Token>(responseContent);
 
             return token;
@@ -116,7 +113,6 @@
             var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
-            //_context.Vtex.Logger.Debug("LoadFolderIds", null, $"Account '{accountName}' [{response.StatusCode}] {responseContent}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -208,11 +204,6 @@
 
             Lock importLock = JsonConvert.DeserializeObject<Lock>(responseContent);
 
-            if (importLock.ImportStarted == null)
-            {
-                return new DateTime();
-            }
-
             return importLock.ImportStarted;
         }
 
@@ -241,7 +232,7 @@
             }
 
             var client = _clientFactory.CreateClient();
-            var response = await client.SendAsync(request);
+            await client.SendAsync(request);
         }
 
         public async Task<AppSettings> GetAppSettings()
