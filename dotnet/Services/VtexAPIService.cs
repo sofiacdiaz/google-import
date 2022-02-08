@@ -629,14 +629,11 @@ namespace SheetsCatalogImport.Services
                                     }
 
                                     success &= productV2Response.Success;
-
-                                    Console.WriteLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
                                     sb.AppendLine($"ProductV2: [{productV2Response.StatusCode}] {productV2Response.Message}");
                                 }
                                 catch (Exception ex)
                                 {
                                     success = false;
-                                    Console.WriteLine($"ProductV2: (err): {ex.Message}");
                                     sb.AppendLine($"ProductV2 (err): {ex.Message}");
                                 }
                             }
@@ -823,7 +820,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch(Exception ex)
                                 {
-                                    Console.WriteLine($"EAN/GTIN: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, "EAN/GTIN", ex);
                                 }
                             }
                             
@@ -887,7 +884,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Images: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, "Images", ex);
                                 }
                             }
                             
@@ -915,7 +912,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Price: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, "Price", ex);
                                 }
                             }
                             
@@ -957,7 +954,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Inventory: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, "Inventory", ex);
                                 }
                             }
                             
@@ -1076,7 +1073,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Specs: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, "Spec", ex);
                                 }
                             }
                             
@@ -1091,7 +1088,7 @@ namespace SheetsCatalogImport.Services
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Activate Sku: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, $"Activate Sku '{skuid}' error", ex);
                                     sb.AppendLine($"Activate Sku error: {ex.Message}");
                                 }
                             }
@@ -1105,12 +1102,12 @@ namespace SheetsCatalogImport.Services
                                     {
                                         UpdateResponse tradePolicyResponse = await this.CreateProductToTradePolicy(productid, policyId);
                                         success &= tradePolicyResponse.Success;
-                                        sb.AppendLine($"Trade Policy Id '{tradePolicyId}': [{skuUpdateResponse.StatusCode}] {skuUpdateResponse.Message}");
+                                        sb.AppendLine($"Trade Policy Id '{tradePolicyId}': [{tradePolicyResponse.StatusCode}] {tradePolicyResponse.Message}");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Trade Policy: {ex.Message}");
+                                    _context.Vtex.Logger.Error("ProcessSheet", null, $"Trade Policy Id '{tradePolicyId}' error", ex);
                                     sb.AppendLine($"Trade Policy Id '{tradePolicyId}' error: {ex.Message}");
                                 }
                             }
@@ -2467,10 +2464,6 @@ namespace SheetsCatalogImport.Services
 
                 success = await _googleSheetsService.BatchUpdate(sheetId, batchUpdate);
             }
-            else
-            {
-                Console.WriteLine("NULL Sheet");
-            }
 
             _context.Vtex.Logger.Info("SetBrandList", null, $"Set Brands and Categories [{success}] ");
 
@@ -2600,20 +2593,14 @@ namespace SheetsCatalogImport.Services
 
         private async Task<ProductRequestV2> MergeProductRequestV2(ProductRequestV2 existingProduct, ProductRequestV2 newProduct, bool update = false)
         {
-            Console.WriteLine("MergeProductRequestV2");
             foreach (Skus skus in newProduct.Skus)
             {
-                Console.WriteLine($" - Adding sku '{skus.Id}'");
                 if (existingProduct.Skus.Any(s => s.Id.Equals(skus.Id)))
                 {
                     if (update)
                     {
                         existingProduct.Skus.Remove(existingProduct.Skus.FirstOrDefault(s => s.Id.Equals(skus.Id)));
                         existingProduct.Skus.Add(skus);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Skipping...");
                     }
                 }
                 else
