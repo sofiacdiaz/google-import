@@ -256,7 +256,6 @@
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"GetAppSettings [{response.StatusCode}] {responseContent}");
                 if (response.IsSuccessStatusCode)
                 {
                     appSettings = JsonConvert.DeserializeObject<AppSettings>(responseContent);
