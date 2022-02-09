@@ -54,10 +54,11 @@ namespace SheetsCatalogImport.Services
 
             DateTime importStarted = await _sheetsCatalogImportRepository.CheckImportLock();
             TimeSpan elapsedTime = DateTime.Now - importStarted;
-            if (elapsedTime.TotalHours < SheetsCatalogImportConstants.LOCK_TIMEOUT)
+            if (elapsedTime.TotalMinutes < SheetsCatalogImportConstants.LOCK_TIMEOUT)
             {
                 _context.Vtex.Logger.Info("ProcessSheet", null, $"Blocked by lock.  Import started: {importStarted}");
                 response.Message = $"Import started {importStarted} in progress.";
+                response.Blocked = true;
                 return response;
             }
 
@@ -2028,16 +2029,18 @@ namespace SheetsCatalogImport.Services
             return updateResponse;
         }
 
-        public async Task<string> ClearSheet()
+        public async Task<ProcessResult> ClearSheet()
         {
-            string response = string.Empty;
+            ProcessResult response = new ProcessResult();
 
             DateTime importStarted = await _sheetsCatalogImportRepository.CheckImportLock();
             TimeSpan elapsedTime = DateTime.Now - importStarted;
-            if (elapsedTime.TotalHours < SheetsCatalogImportConstants.LOCK_TIMEOUT)
+            if (elapsedTime.TotalMinutes < SheetsCatalogImportConstants.LOCK_TIMEOUT)
             {
                 _context.Vtex.Logger.Info("ClearSheet", null, $"Blocked by lock.  Import started: {importStarted}");
-                return ($"Import started {importStarted} in progress.");
+                response.Blocked = true;
+                response.Message = $"Import started {importStarted} in progress.";
+                return response;
             }
 
             string importFolderId = null;
@@ -2058,7 +2061,7 @@ namespace SheetsCatalogImport.Services
                     SheetRange sheetRange = new SheetRange();
                     sheetRange.Ranges = new List<string>();
                     sheetRange.Ranges.Add($"A2:ZZ{SheetsCatalogImportConstants.DEFAULT_SHEET_SIZE}");
-                    response = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
+                    response.Message = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
                 }
             }
 
