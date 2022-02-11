@@ -83,12 +83,17 @@ const ProcessSheetButton: FC = () => {
   const [showError, setShowError] = useState(true)
   const [sheetImport, { loading: sheetProcessing, data: sheetProcessed }] =
       useMutation<{
-        processSheet: { done: number; error: number; message: string; blocked: boolean }
-    }>(M_PROCESS_SHEET)
+          processSheet: {
+              done: number
+              error: number
+              message: string
+              blocked: boolean
+          }
+      }>(M_PROCESS_SHEET)
 
   const rowErrors = sheetProcessed?.processSheet?.error ?? 0
   const rowDone = sheetProcessed?.processSheet?.done ?? 0
-  const isBlocked = sheetProcessed?.processSheet?.blocked ?? false
+  const isImportBlocked = sheetProcessed?.processSheet?.blocked ?? false
   const displayAlerts = !sheetProcessing && sheetProcessed
 
   return (
@@ -99,15 +104,15 @@ const ProcessSheetButton: FC = () => {
             rowDone,
             rowErrors,
             showAlert: showSuccess,
-              setShowAlert: setShowSuccess,
-              isBlocked: isBlocked,
+            setShowAlert: setShowSuccess,
+            isBlocked: isImportBlocked,
           })}
           {errorAlert({
             rowDone,
             rowErrors,
             showAlert: showError,
-              setShowAlert: setShowError,
-              isBlocked: isBlocked,
+            setShowAlert: setShowError,
+            isBlocked: isImportBlocked,
           })}
         </Fragment>
       )}
