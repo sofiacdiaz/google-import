@@ -9,7 +9,7 @@
   "admin/sheets-catalog-import.sheet-import.done": "{done, plural, one {# product} other {# products}} imported.",
   "admin/sheets-catalog-import.sheet-import.error": "{errors, plural, one {# product wasn't} other {# products weren't}} imported. Please, try again.",
   "admin/sheets-catalog-import.sheet-import.only-errors": "It wasn't possible to import the products. Please, try again.",
-  "admin/sheets-catalog-import.sheet-import.blocked": "Import blocked by lock.",
+  "admin/sheets-catalog-import.sheet-import.blocked": "Another import is currently in progress. Wait 10 minutes before trying again.",
   "admin/sheets-catalog-import.connected-as": "admin/sheets-catalog-import.connected-as",
   "admin/sheets-catalog-import.disconnect.button": "admin/sheets-catalog-import.disconnect.button",
   "admin/sheets-catalog-import.setup.button": "admin/sheets-catalog-import.setup.button",
