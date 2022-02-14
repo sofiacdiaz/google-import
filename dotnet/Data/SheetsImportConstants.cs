@@ -67,7 +67,7 @@ namespace SheetsCatalogImport.Data
         public const int WRITE_BLOCK_SIZE_DIVISOR = 50;
         public const int DEFAULT_SHEET_SIZE = 1000;
 
-        public const int LOCK_TIMEOUT = 1;
+        public const int LOCK_TIMEOUT = 10; // minutes
 
         public const string HEADER = "ProductId,SkuId,Category,Brand,ProductName,Product Reference Code,Trade Policy Id,SkuName,Sku EAN/GTIN,SKU Reference Code,Height,Width,Length,Weight,Product Description,Search Keywords,MetaTag Description,Image URL 1,Image URL 2,Image URL 3,Image URL 4,Image URL 5,Display if Out of Stock,MSRP,Selling Price (Price to GPP),Available Quantity,ProductSpecs,Sku Specs,Update,Activate Sku,Status,Message";
         public const long VOLUMETIC_FACTOR = 166;

@@ -10,5 +10,7 @@ namespace SheetsCatalogImport.Models
         public int Error { get; set; }
         [JsonProperty("message")]
         public string Message { get; set; }
+        [JsonProperty("blocked")]
+        public bool Blocked { get; set; }
     }
 }

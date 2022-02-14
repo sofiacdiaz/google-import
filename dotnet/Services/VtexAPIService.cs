@@ -54,10 +54,11 @@ namespace SheetsCatalogImport.Services
 
             DateTime importStarted = await _sheetsCatalogImportRepository.CheckImportLock();
             TimeSpan elapsedTime = DateTime.Now - importStarted;
-            if (elapsedTime.TotalHours < SheetsCatalogImportConstants.LOCK_TIMEOUT)
+            if (elapsedTime.TotalMinutes < SheetsCatalogImportConstants.LOCK_TIMEOUT)
             {
                 _context.Vtex.Logger.Info("ProcessSheet", null, $"Blocked by lock.  Import started: {importStarted}");
                 response.Message = $"Import started {importStarted} in progress.";
+                response.Blocked = true;
                 return response;
             }
 
@@ -282,9 +283,10 @@ namespace SheetsCatalogImport.Services
                                 try
                                 {
                                     GetCategoryListV2Response getCategoryList = await GetCategoryListV2(accountName);
+                                    string[] categoryArr = category.Split('/');
                                     if (getCategoryList != null)
                                     {
-                                        var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(category, StringComparison.OrdinalIgnoreCase)).ToList();
+                                        var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(categoryArr.Last(), StringComparison.OrdinalIgnoreCase)).ToList();
                                         try
                                         {
                                             categoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
@@ -297,16 +299,46 @@ namespace SheetsCatalogImport.Services
 
                                     if (string.IsNullOrEmpty(categoryId))
                                     {
-                                        CreateCategoryV2Response createCategoryV2Response = await this.CreateCategoryV2(category);
-                                        if (createCategoryV2Response != null && createCategoryV2Response.Value != null)
+                                        string parentCategoryId = null;
+                                        for (int catIndex = 0; catIndex < categoryArr.Length; catIndex++)
                                         {
-                                            categoryId = createCategoryV2Response.Value.Id;
-                                            _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Created Category '{category}' {categoryId}");
-                                            sb.AppendLine($"Created Category '{category}' Id: {categoryId}");
-                                        }
-                                        else
-                                        {
-                                            _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Failed to create Category '{category}' {categoryId}");
+                                            bool categoryExists = false;
+                                            if (getCategoryList != null)
+                                            {
+                                                var catList = getCategoryList.Roots.Where(c => c.Value.Name.Contains(categoryArr[catIndex], StringComparison.OrdinalIgnoreCase)).ToList();
+                                                try
+                                                {
+                                                    parentCategoryId = catList.Select(c => c.Value.Id).FirstOrDefault().ToString();
+                                                    if (string.IsNullOrEmpty(parentCategoryId))
+                                                    {
+                                                        categoryExists = false;
+                                                        parentCategoryId = null;
+                                                    }
+                                                    else
+                                                    {
+                                                        categoryExists = true;
+                                                    }
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    _context.Vtex.Logger.Error("ProcessSheet", "CategoryV2", $"Error getting Parent Id for '{categoryArr[catIndex]}' ", ex);
+                                                }
+                                            }
+
+                                            if (!categoryExists)
+                                            {
+                                                CreateCategoryV2Response createCategoryV2Response = await this.CreateCategoryV2(categoryArr[catIndex], parentCategoryId);
+                                                if (createCategoryV2Response != null && createCategoryV2Response.Value != null)
+                                                {
+                                                    categoryId = createCategoryV2Response.Value.Id;
+                                                    _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Created Category '{categoryArr[catIndex]}' {categoryId}");
+                                                    sb.AppendLine($"Created Category '{categoryArr[catIndex]}' Id: {categoryId}");
+                                                }
+                                                else
+                                                {
+                                                    _context.Vtex.Logger.Info("ProcessSheet", "CategoryV2", $"Failed to create Category '{categoryArr[catIndex]}' {categoryId}");
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1674,18 +1706,19 @@ namespace SheetsCatalogImport.Services
             return getCategoryList;
         }
 
-        public async Task<CreateCategoryV2Response> CreateCategoryV2(string categoryName)
+        public async Task<CreateCategoryV2Response> CreateCategoryV2(string categoryName, string parentId = null)
         {
             CreateCategoryV2Response createCategoryV2Response = null;
             CreateCategoryV2Request createCategoryV2Request = new CreateCategoryV2Request
             {
-                Name = categoryName
+                Name = categoryName,
+                ParentId = parentId
             };
 
             string accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             string url = $"https://portal.vtexcommercestable.com.br/api/catalogv2/category-tree/categories?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Post, url, createCategoryV2Request);
-
+            Console.WriteLine($"CreateCategoryV2 = '{response.Message}' '{response.ResponseText}'");
             if (response.IsSuccess)
             {
                 createCategoryV2Response = JsonConvert.DeserializeObject<CreateCategoryV2Response>(response.ResponseText);
@@ -2028,16 +2061,18 @@ namespace SheetsCatalogImport.Services
             return updateResponse;
         }
 
-        public async Task<string> ClearSheet()
+        public async Task<ProcessResult> ClearSheet()
         {
-            string response = string.Empty;
+            ProcessResult response = new ProcessResult();
 
             DateTime importStarted = await _sheetsCatalogImportRepository.CheckImportLock();
             TimeSpan elapsedTime = DateTime.Now - importStarted;
-            if (elapsedTime.TotalHours < SheetsCatalogImportConstants.LOCK_TIMEOUT)
+            if (elapsedTime.TotalMinutes < SheetsCatalogImportConstants.LOCK_TIMEOUT)
             {
                 _context.Vtex.Logger.Info("ClearSheet", null, $"Blocked by lock.  Import started: {importStarted}");
-                return ($"Import started {importStarted} in progress.");
+                response.Blocked = true;
+                response.Message = $"Import started {importStarted} in progress.";
+                return response;
             }
 
             string importFolderId = null;
@@ -2058,7 +2093,7 @@ namespace SheetsCatalogImport.Services
                     SheetRange sheetRange = new SheetRange();
                     sheetRange.Ranges = new List<string>();
                     sheetRange.Ranges.Add($"A2:ZZ{SheetsCatalogImportConstants.DEFAULT_SHEET_SIZE}");
-                    response = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
+                    response.Message = await _googleSheetsService.ClearSpreadsheet(sheetId, sheetRange);
                 }
             }
 

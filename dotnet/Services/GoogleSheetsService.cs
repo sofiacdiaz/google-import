@@ -240,6 +240,8 @@ namespace SheetsCatalogImport.Services
                     }
                     else
                     {
+                        await RevokeGoogleAuthorizationToken();
+                        await _sheetsCatalogImportRepository.ClearImportLock();
                         _context.Vtex.Logger.Warn("GetGoogleToken", null, $"Could not refresh token.");
                     }
                 }
@@ -248,6 +250,7 @@ namespace SheetsCatalogImport.Services
             {
                 _context.Vtex.Logger.Warn("GetGoogleToken", null, $"Could not load token.  Refresh token was null. Have Access token?{token != null && !string.IsNullOrEmpty(token.AccessToken)}");
                 await this.RevokeGoogleAuthorizationToken();
+                await _sheetsCatalogImportRepository.ClearImportLock();
             }
 
             return token;
@@ -473,7 +476,7 @@ namespace SheetsCatalogImport.Services
             }
             else
             {
-                _context.Vtex.Logger.Info("CreateFolder", folderName, "Token error.");
+                _context.Vtex.Logger.Error("CreateFolder", folderName, "Token error.");
             }
 
             return folderId;
@@ -1343,6 +1346,10 @@ namespace SheetsCatalogImport.Services
 
                 await this.MoveFile(sheetId, productsFolderId);
                 await SetPermission(sheetId);
+            }
+            else
+            {
+                _context.Vtex.Logger.Error("CreateSheet", null, "Failed to create sheet.");
             }
 
             return (await this.GetSheetLink());

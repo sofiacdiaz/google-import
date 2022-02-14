@@ -184,6 +184,9 @@
       "name": "category-read"
     },
     {
+      "name": "category-write"
+    },
+    {
       "name": "vbase-read-write"
     }
   ],

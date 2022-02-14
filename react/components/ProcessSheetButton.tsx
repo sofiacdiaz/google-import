@@ -12,6 +12,7 @@ interface AlertParams {
   rowErrors: number
   showAlert: boolean
   setShowAlert: React.Dispatch<React.SetStateAction<boolean>>
+  isBlocked: boolean
 }
 
 const successAlert = ({
@@ -19,6 +20,7 @@ const successAlert = ({
   rowErrors,
   showAlert,
   setShowAlert,
+  isBlocked,
 }: AlertParams) => {
   if (!showAlert) return null
 
@@ -29,7 +31,9 @@ const successAlert = ({
       <div className="mb2">
         <Alert type="success" onClose={() => setShowAlert(false)}>
           {/* If no error alert and no rows processed; give the user feedback that the process has run */}
-          {rowDone === 0 ? (
+          {isBlocked ? (
+            <FormattedMessage id="admin/sheets-catalog-import.sheet-import.blocked" />
+          ) : rowDone === 0 ? (
             <FormattedMessage id="admin/sheets-catalog-import.sheet-import.no-change" />
           ) : (
             <FormattedMessage
@@ -77,11 +81,17 @@ const ProcessSheetButton: FC = () => {
   const [showError, setShowError] = useState(true)
   const [sheetImport, { loading: sheetProcessing, data: sheetProcessed }] =
     useMutation<{
-      processSheet: { done: number; error: number; message: string }
+      processSheet: {
+        done: number
+        error: number
+        message: string
+        blocked: boolean
+      }
     }>(M_PROCESS_SHEET)
 
   const rowErrors = sheetProcessed?.processSheet?.error ?? 0
   const rowDone = sheetProcessed?.processSheet?.done ?? 0
+  const isImportBlocked = sheetProcessed?.processSheet?.blocked ?? false
   const displayAlerts = !sheetProcessing && sheetProcessed
 
   return (
@@ -93,12 +103,14 @@ const ProcessSheetButton: FC = () => {
             rowErrors,
             showAlert: showSuccess,
             setShowAlert: setShowSuccess,
+            isBlocked: isImportBlocked,
           })}
           {errorAlert({
             rowDone,
             rowErrors,
             showAlert: showError,
             setShowAlert: setShowError,
+            isBlocked: isImportBlocked,
           })}
         </Fragment>
       )}
