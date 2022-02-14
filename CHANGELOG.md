@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - CATIMPORT-24 Improved messaging when blocked by lock.
-- Shortened lock timeout
+- Shortened lock timeout to 10 minutes
 
 ## [0.3.3] - 2022-02-08
 
