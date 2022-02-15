@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Must use http for requests in IO
+- Must use http for requests in IO 
 
 ## [0.3.4] - 2022-02-14
 
