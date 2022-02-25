@@ -97,6 +97,13 @@
     {
       "name": "outbound-access",
       "attrs": {
+        "host": "portal.vtexcommercestable.com.br",
+        "path": "/api/catalog_system/*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
         "host": "api.vtex.com",
         "path": "/{{account}}/pricing/prices/*"
       }
@@ -179,6 +186,9 @@
     },
     {
       "name": "brand-read"
+    },
+    {
+      "name": "brand-write"
     },
     {
       "name": "category-read"
