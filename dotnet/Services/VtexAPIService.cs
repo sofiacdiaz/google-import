@@ -1586,7 +1586,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName)
         {
             // GET http://{accountName}.{environment}.com.br/api/catalog_system/pub/category/tree/categoryLevels
-            GetCategoryTreeResponse[] getCategoryTreeResponse = null;
+            GetCategoryTreeResponse[] getCategoryTreeResponse = new GetCategoryTreeResponse[0];
             if (string.IsNullOrEmpty(accountName))
             {
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
@@ -1623,7 +1623,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetBrandListResponse[]> GetBrandList(string accountName)
         {
             // GET http://{accountName}.{environment}.com.br/api/catalog_system/pvt/brand/list
-            GetBrandListResponse[] getBrandListResponse = null;
+            GetBrandListResponse[] getBrandListResponse = new GetBrandListResponse[0];
             if (string.IsNullOrEmpty(accountName))
             {
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
