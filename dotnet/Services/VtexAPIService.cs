@@ -1586,7 +1586,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetCategoryTreeResponse[]> GetCategoryTree(int categoryLevels, string accountName)
         {
             // GET http://{accountName}.{environment}.com.br/api/catalog_system/pub/category/tree/categoryLevels
-            GetCategoryTreeResponse[] getCategoryTreeResponse = null;
+            GetCategoryTreeResponse[] getCategoryTreeResponse = new GetCategoryTreeResponse[0];
             if (string.IsNullOrEmpty(accountName))
             {
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
@@ -1623,7 +1623,7 @@ namespace SheetsCatalogImport.Services
         public async Task<GetBrandListResponse[]> GetBrandList(string accountName)
         {
             // GET http://{accountName}.{environment}.com.br/api/catalog_system/pvt/brand/list
-            GetBrandListResponse[] getBrandListResponse = null;
+            GetBrandListResponse[] getBrandListResponse = new GetBrandListResponse[0];
             if (string.IsNullOrEmpty(accountName))
             {
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
@@ -2429,7 +2429,10 @@ namespace SheetsCatalogImport.Services
                 };
 
                 await _googleSheetsService.WriteSpreadsheetValues(sheetId, valueRangeToWrite);
-
+                
+                int updateCategoryValueListCount = updateCategoryValueList.Count > 0 ? updateCategoryValueList.Count : 100;
+                int updateBrandValueListCount = updateBrandValueList.Count > 0 ? updateBrandValueList.Count : 100;
+                
                 BatchUpdate batchUpdate = new BatchUpdate
                 {
                     Requests = new Request[]
@@ -2455,7 +2458,7 @@ namespace SheetsCatalogImport.Services
                                         {
                                             new Value
                                             {
-                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$A$1:$A${updateCategoryValueList.Count}"
+                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$A$1:$A${updateCategoryValueListCount}"
                                             }
                                         }
                                     },
@@ -2485,7 +2488,7 @@ namespace SheetsCatalogImport.Services
                                         {
                                             new Value
                                             {
-                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$B$1:$B${updateBrandValueList.Count}"
+                                                UserEnteredValue = $"={SheetsCatalogImportConstants.SheetNames.VALIDATION}!$B$1:$B${updateBrandValueListCount}"
                                             }
                                         }
                                     },
