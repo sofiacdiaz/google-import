@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- (CATIMPORT-27) Handle errors getting brands and categories
+
 ## [0.3.5] - 2022-02-15
 
 ### Changed
