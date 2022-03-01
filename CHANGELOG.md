@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- (CATIMPORT-27) Changed get brand url from pvt to pub
+
 ## [0.3.6] - 2022-02-25
 
 ### Fixed
