@@ -1629,7 +1629,7 @@ namespace SheetsCatalogImport.Services
                 accountName = this._httpContextAccessor.HttpContext.Request.Headers[SheetsCatalogImportConstants.VTEX_ACCOUNT_HEADER_NAME];
             }
 
-            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list?an={accountName}";
+            string url = $"http://portal.vtexcommercestable.com.br/api/catalog_system/pub/brand/list?an={accountName}";
             ResponseWrapper response = await this.SendRequest(HttpMethod.Get, url);
             if (response.IsSuccess)
             {
