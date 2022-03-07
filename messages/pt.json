@@ -1,0 +1,36 @@
+{
+    "admin/sheets-catalog-import.title": "Importação do Catálogo via Google",   
+    "admin/sheets-catalog-import.setup.title": "Setup", 
+    "admin/sheets-catalog-import.setup.description": "Por favor clique no botão abaixo para garantir acesso do app ao seu Google Drive.",
+    "admin/sheets-catalog-import.connected.text": "Sua conta Google foi conectada",
+    "admin/sheets-catalog-import.sheet-import.button": "Importar Planilha",
+    "admin/sheets-catalog-import.sheet-import.no-change": "Não há produtos a serem importados.",
+    "admin/sheets-catalog-import.sheet-import.done": "{concluído, plural, um {# produto} other {# produtos}} importado(s).",
+    "admin/sheets-catalog-import.sheet-import.error": "{erros, plural, one {# Produto não foi} other {# Produtos não foram}} importado(s). Por favor, tente novamente.",
+    "admin/sheets-catalog-import.sheet-import.only-errors": "Não foi possível importar os produtos. Por favor, tente novamente.",
+    "admin/sheets-catalog-import.sheet-import.blocked": "Outra importação está em andamento. Aguarde 10 minutos antes de tentar novamente.",
+    "admin/sheets-catalog-import.connected-as": "Conectado à conta ",
+    "admin/sheets-catalog-import.disconnect.button": "Desconectado",
+    "admin/sheets-catalog-import.setup.button": "Liberar Acesso",
+    "admin/sheets-catalog-import.catalog-product.title": "Importação do Catálogo de produtos",
+    "admin/sheets-catalog-import.sheet-link.description": "Link para a planilha",
+    "admin/sheets-catalog-import.settings.v2-catalog": "Usando Catálogo V2",
+    "admin/sheets-catalog-import.settings.account": "Nome da Conta",
+    "admin/sheets-catalog-import.settings.accountHelp": "Conta a ser usada para Marcas e Categorias",
+    "admin/sheets-catalog-import.settings.save": "Salvar",
+    "admin/sheets-catalog-import.settings.success": "Configurações Salvas.",
+    "admin/sheets-catalog-import.settings.error": "Erros ao Salvar Configurações do App. Por favor, tente novamente.",
+    "admin/sheets-catalog-import.sheet-import.description": "Importar produtos para o Catálogo",
+    "admin/sheets-catalog-import.create-sheet.description": "Criar Planilha",
+    "admin/sheets-catalog-import.create-sheet.button": "Criar Planilha",
+    "admin/sheets-catalog-import.sheet-clear.description": "Apagar dados da Planilha",
+    "admin/sheets-catalog-import.sheet-clear.button": "Limpar Planilha",
+    "admin/sheets-catalog-import.sheet-clear.success": "Dados da Planilha apagados",
+    "admin/sheets-catalog-import.add-images.description": "Adicionar Links das Imagens na aba Images",
+    "admin/sheets-catalog-import.add-images.button": "Adicionar imagens",
+    "admin/sheets-catalog-import.add-images.tooltip": "Esta funcionalidade somente funciona se você também utilizar o App VTEX Google Drive, que cria uma pasta no seu drive. Você pode usar o folder chamado NEW para adicionar imagens imagens de produtos. Essas imagens serão pré-populadas na sua Planilha do de Importação do Catálogo via Google",
+    "admin/sheets-catalog-import.add-images.success": "Imagens adicionadas"
+   }
+   
+   
+   
